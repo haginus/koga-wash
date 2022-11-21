@@ -12,6 +12,10 @@ export class MachinesService {
     return this.machineModel.find().exec();
   }
 
+  async findOne(id: string): Promise<Machine> {
+    return this.machineModel.findById(id).exec();
+  }
+
   async create(machineDto: CreateMachineDto) {
     const createdMachine = new this.machineModel(machineDto);
     return createdMachine.save();

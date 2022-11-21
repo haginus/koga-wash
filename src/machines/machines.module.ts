@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { MachineInstancesController } from './machine-instances.controller';
+import { MachineInstancesService } from './machine-instances.service';
 import { MachinesController } from './machines.controller';
 import { MachinesService } from './machines.service';
 import { DryerMachine, DryerMachineSchema } from './schemas/dryer-machine.schema';
+import { MachineInstance, MachineInstanceSchema } from './schemas/machine-instance.schema';
 import { Machine, MachineSchema } from './schemas/machine.schema';
-import { Programme, ProgrammeSchema } from './schemas/programme.schema';
 import { WashingMachine, WashingMachineSchema } from './schemas/washing-machine.schema';
 
 @Module({
@@ -18,9 +20,10 @@ import { WashingMachine, WashingMachineSchema } from './schemas/washing-machine.
           { name: DryerMachine.name, schema: DryerMachineSchema },
         ],
       },
+      { name: MachineInstance.name, schema: MachineInstanceSchema },
     ]),
   ],
-  controllers: [MachinesController],
-  providers: [MachinesService],
+  controllers: [MachinesController, MachineInstancesController],
+  providers: [MachinesService, MachineInstancesService],
 })
 export class MachinesModule {}
