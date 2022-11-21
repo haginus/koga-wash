@@ -25,5 +25,6 @@ import { WashingMachine, WashingMachineSchema } from './schemas/washing-machine.
   ],
   controllers: [MachinesController, MachineInstancesController],
   providers: [MachinesService, MachineInstancesService],
+  exports: [MachinesService, MachineInstancesService],
 })
 export class MachinesModule {}

@@ -10,6 +10,10 @@ export class MachineInstancesService {
   constructor(@InjectModel(MachineInstance.name) private machineInstanceModel: Model<MachineInstanceDocument>,
     private readonly machinesService: MachinesService) {}
 
+  async findOne(id: string): Promise<MachineInstance> {
+    return this.machineInstanceModel.findById(id).exec();
+  }
+
   async findAll(): Promise<MachineInstance[]> {
     return this.machineInstanceModel.find().populate("machine").exec();
   }

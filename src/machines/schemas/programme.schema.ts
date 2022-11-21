@@ -2,6 +2,9 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 @Schema()
 export class Programme {
+
+  _id: string;
+
   @Prop()
   name: string;
 

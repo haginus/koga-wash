@@ -3,6 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { CreateMachineDto } from "./dto/create-machine.dto";
 import { Machine, MachineDocument } from "./schemas/machine.schema";
+import * as mongoose from 'mongoose';
 
 @Injectable()
 export class MachinesService {
@@ -19,5 +20,16 @@ export class MachinesService {
   async create(machineDto: CreateMachineDto) {
     const createdMachine = new this.machineModel(machineDto);
     return createdMachine.save();
+  }
+
+  async findProgrammeById(id: string) {
+    const machines = await this.findAll();
+    for(const machine of machines) {
+      for(const programme of machine.programmes) {
+        if(programme._id.toString() === id) {
+          return programme;
+        }
+      }
+    }
   }
 }
