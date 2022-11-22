@@ -7,6 +7,8 @@ export type MachineInstanceDocument = mongoose.HydratedDocument<MachineInstance>
 @Schema()
 export class MachineInstance {
 
+  _id: string;
+
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Machine' })
   machine: Machine;
 

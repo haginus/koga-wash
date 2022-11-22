@@ -5,7 +5,7 @@ export class CreateReservationDto {
 
   @IsString()
   @IsNotEmpty()
-  userId: string;
+  user: string;
 
   @IsString()
   @IsNotEmpty()
@@ -15,7 +15,7 @@ export class CreateReservationDto {
   @IsNotEmpty()
   programme: string;
 
-  @IsDateString()
+  // @IsDateString()
   @Type(() => Date)
   startTime: Date;
   
