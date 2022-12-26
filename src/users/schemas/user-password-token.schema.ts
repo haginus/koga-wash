@@ -15,6 +15,12 @@ export class UserPasswordToken {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   user: User;
 
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  used: boolean;
+
 }
 
 export const UserPasswordTokenSchema = SchemaFactory.createForClass(UserPasswordToken);

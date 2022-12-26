@@ -14,9 +14,8 @@ export class UsersService {
 
   private generatePasswordToken(user: User) {
     const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    return new this.userPasswordTokenModel({ user, token });
+    return new this.userPasswordTokenModel({ user, token, createdAt: new Date(), used: false });
   }
-
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.findOneByEmail(createUserDto.email);
@@ -33,11 +32,17 @@ export class UsersService {
     }
   }
 
+  async updateUserPassword(id: string, password: string) {
+    const user = await this.findOne(id);
+    user.password = password;
+    return user.save();
+  }
+
   async findAll(): Promise<User[]> {
     return this.userModel.find().exec();
   }
 
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string) {
     return this.userModel.findOne({ _id: id }).exec();
   }
 
@@ -50,5 +55,9 @@ export class UsersService {
       .findByIdAndRemove({ _id: id })
       .exec();
     return deletedUser;
+  }
+
+  async findToken(token: string) {
+    return this.userPasswordTokenModel.findOne({ token }).populate('user').exec();
   }
 }
