@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { CurrentUser } from "src/auth/decorators/current-user.decorator";
+import { User } from "src/users/schemas/user.schema";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { ReservationsService } from "./reservations.service";
 import { Reservation } from "./schemas/reservation.schema";
@@ -13,7 +15,8 @@ export class ReservationsController {
   }
 
   @Post()
-  async create(@Body() createReservationDto: CreateReservationDto) {
+  async create(@Body() createReservationDto: CreateReservationDto, @CurrentUser() user: User) {
+    createReservationDto.user = user._id;
     return this.reservationsService.create(createReservationDto);
   }
 
