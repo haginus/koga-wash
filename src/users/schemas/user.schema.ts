@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { UserPasswordToken, UserPasswordTokenSchema } from './user-password-token.schema';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -19,6 +20,9 @@ export class User {
 
   @Prop()
   password: string;
+
+  @Prop({ type: [UserPasswordTokenSchema] })
+  programmes: UserPasswordToken[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
