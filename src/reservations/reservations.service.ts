@@ -1,33 +1,37 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { InjectRepository } from "@nestjs/typeorm";
 import { roundToNearest10 } from "src/lib/util";
 import { MachineInstancesService } from "src/machines/machine-instances.service";
 import { MachinesService } from "src/machines/machines.service";
-import { MachineInstance } from "src/machines/schemas/machine-instance.schema";
-import { Programme } from "src/machines/schemas/programme.schema";
+import { Repository } from "typeorm";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
-import { Reservation, ReservationDocument, ReservationStatus } from "./schemas/reservation.schema";
+import { Reservation, ReservationStatus } from "./entities/reservation.entity";
+import { MoreThanOrEqual } from "typeorm";
+import { Programme } from "src/machines/enitities/programme.entity";
 
 @Injectable()
 export class ReservationsService {
-  constructor(@InjectModel(Reservation.name) private reservationModel: Model<ReservationDocument>,
-    private readonly machineInstancesService: MachineInstancesService, private readonly machinesService: MachinesService) {}
+  constructor(
+    @InjectRepository(Reservation) private reservationRepository: Repository<Reservation>,
+    private readonly machineInstancesService: MachineInstancesService,
+    private readonly machinesService: MachinesService
+  ) {}
 
   async findAll(): Promise<Reservation[]> {
-    return this.reservationModel.find().exec();
+    return this.reservationRepository.find();
   }
 
   async findAllSince(startTime: Date) {
-    return this.reservationModel.find({ startTime: { $gte: startTime } }).populate('machineInstance').exec();
+    return this.reservationRepository.findBy({ startTime: MoreThanOrEqual(startTime) });
   }
 
-  async findAllForMachineInstanceSince(machineInstance: string, startTime: Date) {
-    return this.reservationModel.find({ machineInstance, startTime: { $gte: startTime } }).populate('machineInstance').exec();
+  async findAllForMachineInstanceSince(machineInstanceId: string, startTime: Date) {
+    // @ts-ignore
+    return this.reservationRepository.findBy({ machineInstance: { id: machineInstanceId }, startTime: MoreThanOrEqual(startTime) });
   }
 
   async findOne(id: string): Promise<Reservation> {
-    return this.reservationModel.findById(id).exec();
+    return this.reservationRepository.findOneBy({ id });
   }
 
   getAvailableSlots(startTime: Date, _endTime: Date | undefined, reservations: Reservation[], programme: Programme) {
@@ -63,11 +67,11 @@ export class ReservationsService {
       await this.findAllSince(startTime);
     
     const instances = machineInstance ? 
-      [await this.machineInstancesService.findOne(machineInstance)] : 
+      [await this.machineInstancesService.findOne(machineInstance as any)] : 
       await this.machineInstancesService.findAll();
     
     return instances.map(instance => {
-      const instanceReservations = reservations.filter(reservation => reservation.machineInstance._id.toString() == instance._id.toString());
+      const instanceReservations = reservations.filter(reservation => reservation.machineInstance.id == instance.id.toString());
       const instanceSlots = this.getAvailableSlots(startTime, endTime, instanceReservations, programmeInstance);
       return { instance, slots: instanceSlots };
     });
@@ -94,7 +98,7 @@ export class ReservationsService {
     if(availableSlots.length == 0 || availableSlots[0].slots.length == 0) {
       throw new BadRequestException(`No available slots for machine instance ${createReservationDto.machineInstance} at ${createReservationDto.startTime}`);
     }
-    const createdReservation = new this.reservationModel({ ...createReservationDto, endTime, status: ReservationStatus.PENDING });
-    return createdReservation.save();
+    // const createdReservation = new this.reservationModel({ ...createReservationDto, endTime, status: ReservationStatus.PENDING });
+    // return createdReservation.save();
   }
 }

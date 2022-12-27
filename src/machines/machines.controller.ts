@@ -1,14 +1,13 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { CreateMachineDto } from "./dto/create-machine.dto";
 import { MachinesService } from "./machines.service";
-import { Machine } from "./schemas/machine.schema";
 
 @Controller("machines")
 export class MachinesController {
   constructor(private readonly machinesService: MachinesService) {}
 
   @Get()
-  async findAll(): Promise<Machine[]> {
+  async findAll() {
     return this.machinesService.findAll();
   }
 

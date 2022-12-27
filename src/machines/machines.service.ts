@@ -1,35 +1,31 @@
 import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
 import { CreateMachineDto } from "./dto/create-machine.dto";
-import { Machine, MachineDocument } from "./schemas/machine.schema";
-import * as mongoose from 'mongoose';
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Machine } from "./enitities/machine.entity";
+import { Programme } from "./enitities/programme.entity";
 
 @Injectable()
 export class MachinesService {
-  constructor(@InjectModel(Machine.name) private machineModel: Model<MachineDocument>) {}
+  constructor(
+    @InjectRepository(Machine) private machineRepository: Repository<Machine>,
+    @InjectRepository(Programme) private programmeRepository: Repository<Programme>,
+  ) {}
 
   async findAll(): Promise<Machine[]> {
-    return this.machineModel.find().exec();
+    return this.machineRepository.find();
   }
 
   async findOne(id: string): Promise<Machine> {
-    return this.machineModel.findById(id).exec();
+    return this.machineRepository.findOneBy({ id });
   }
 
   async create(machineDto: CreateMachineDto) {
-    const createdMachine = new this.machineModel(machineDto);
-    return createdMachine.save();
+
+    return this.machineRepository.save(machineDto as any);
   }
 
   async findProgrammeById(id: string) {
-    const machines = await this.findAll();
-    for(const machine of machines) {
-      for(const programme of machine.programmes) {
-        if(programme._id.toString() === id) {
-          return programme;
-        }
-      }
-    }
+    return this.programmeRepository.findOneBy({ id });
   }
 }

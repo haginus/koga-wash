@@ -1,21 +1,21 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 import { CreateMachineInstanceDto } from "./dto/create-machine-instance.dto";
+import { MachineInstance } from "./enitities/machine-instance.entity";
 import { MachinesService } from "./machines.service";
-import { MachineInstance, MachineInstanceDocument } from "./schemas/machine-instance.schema";
 
 @Injectable()
 export class MachineInstancesService {
-  constructor(@InjectModel(MachineInstance.name) private machineInstanceModel: Model<MachineInstanceDocument>,
+  constructor(@InjectRepository(MachineInstance) private machineRepository: Repository<MachineInstance>,
     private readonly machinesService: MachinesService) {}
 
   async findOne(id: string): Promise<MachineInstance> {
-    return this.machineInstanceModel.findById(id).exec();
+    return this.machineRepository.findOneBy({ id });
   }
 
   async findAll(): Promise<MachineInstance[]> {
-    return this.machineInstanceModel.find().populate("machine").exec();
+    return this.machineRepository.find();
   }
 
   async create(machineInstanceDto: CreateMachineInstanceDto) {
@@ -23,7 +23,6 @@ export class MachineInstancesService {
     if(!machine) {
       throw new NotFoundException(`Machine with id ${machineInstanceDto.machineId} not found`);
     }
-    const createdMachineInstance = new this.machineInstanceModel({ machine });
-    return createdMachineInstance.save();
+    return this.machineRepository.save({ machine });
   }
 }

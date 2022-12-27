@@ -16,5 +16,5 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsEnum(Role)
-  role: string;
+  role: Role;
 }

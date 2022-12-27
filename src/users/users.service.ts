@@ -1,20 +1,22 @@
-import { Model } from 'mongoose';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserPasswordToken, UserPasswordTokenDocument } from './schemas/user-password-token.schema';
 import { MailService } from '../mail/mail.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
+import { ActivationToken } from './entities/activation-token.entity';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectModel(UserPasswordToken.name) private userPasswordTokenModel: Model<UserPasswordTokenDocument>,
-    private mailService: MailService) {}
+  constructor(
+    @InjectRepository(User) private usersRepository: Repository<User>,
+    @InjectRepository(ActivationToken) private activationTokenRepositoty: Repository<ActivationToken>,
+    private mailService: MailService
+  ) {}
 
   private generatePasswordToken(user: User) {
     const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    return new this.userPasswordTokenModel({ user, token, createdAt: new Date(), used: false });
+    return { user, token, createdAt: new Date(), used: false };
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -23,9 +25,9 @@ export class UsersService {
       throw new BadRequestException('Email already exists');
     }
     try {
-      const createdUser = await (new this.userModel(createUserDto)).save();
-      const createdUserPasswordToken = await this.generatePasswordToken(createdUser).save();
-      await this.mailService.sendUserConfirmation(createdUser.toJSON(), createdUserPasswordToken.toJSON().token);
+      const createdUser = await this.usersRepository.save(createUserDto);
+      const createdUserPasswordToken = await this.activationTokenRepositoty.save(this.generatePasswordToken(createdUser));
+      await this.mailService.sendUserConfirmation(createdUser, createdUserPasswordToken.token);
       return createdUser;
     } catch (error) {
       throw error;
@@ -35,29 +37,27 @@ export class UsersService {
   async updateUserPassword(id: string, password: string) {
     const user = await this.findOne(id);
     user.password = password;
-    return user.save();
+    return this.usersRepository.save(user);
   }
 
   async findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+    return this.usersRepository.find();
   }
 
   async findOne(id: string) {
-    return this.userModel.findOne({ _id: id }).exec();
+    return this.usersRepository.findOneBy({ id });
   }
 
   async findOneByEmail(email: string) {
-    return this.userModel.findOne({ email }).exec();
+    return this.usersRepository.findOneBy({ email });
   }
 
   async delete(id: string) {
-    const deletedUser = await this.userModel
-      .findByIdAndRemove({ _id: id })
-      .exec();
+    const deletedUser = await this.usersRepository.delete({ id });
     return deletedUser;
   }
 
   async findToken(token: string) {
-    return this.userPasswordTokenModel.findOne({ token }).populate('user').exec();
+    return this.activationTokenRepositoty.findOneBy({ token });
   }
 }

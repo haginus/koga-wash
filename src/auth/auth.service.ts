@@ -3,8 +3,8 @@ import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ChangePasswordDto } from './dto/ChangePasswordDto';
 import { hashSync, compareSync } from "bcrypt";
-import { User } from 'src/users/schemas/user.schema';
 import { JwtPayloadDto } from './dto/JwtPayloadDto';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -18,12 +18,11 @@ export class AuthService {
     if(!tokenResult || tokenResult.used) {
       throw new BadRequestException('Token invalid.');
     }
-    await this.usersService.updateUserPassword(tokenResult.user._id, hashSync(password, 10));
-    await tokenResult.updateOne({ used: true });
+    await this.usersService.updateUserPassword(tokenResult.user.id, hashSync(password, 10));
   }
 
   async validateUser(email: string, pass: string): Promise<any> {
-    const user = (await this.usersService.findOneByEmail(email)).toJSON();
+    const user = (await this.usersService.findOneByEmail(email));
     if (user && compareSync(pass, user.password)) {
       const { password, ...result } = user;
       return result;
@@ -32,7 +31,7 @@ export class AuthService {
   }
 
   async login(user: User) {
-    const payload: JwtPayloadDto = { email: user.email, role: user.role, sub: user._id };
+    const payload: JwtPayloadDto = { email: user.email, role: user.role, sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),
     };
@@ -41,7 +40,7 @@ export class AuthService {
   async validateUserByJwt(payload: JwtPayloadDto) {
     const user = await this.usersService.findOne(payload.sub);
     if (user) {
-      return user.toJSON();
+      return user;
     }
     return null;
   }

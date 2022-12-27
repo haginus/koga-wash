@@ -1,6 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { User } from './schemas/user.schema';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -13,12 +12,12 @@ export class UsersController {
   }
 
   @Get()
-  async findAll(): Promise<User[]> {
+  async findAll() {
     return this.usersService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<User> {
+  async findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
