@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { roundToNearest10 } from "src/lib/util";
+import { roundToNearest10, entityOrFail } from "src/lib/util";
 import { MachineInstancesService } from "src/machines/machine-instances.service";
 import { FindOptionsWhere, LessThanOrEqual, Repository } from "typeorm";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
@@ -12,6 +12,9 @@ import { UsersService } from "src/users/users.service";
 import { MailService } from "src/mail/mail.service";
 import { ReservationQueryDto } from "./dto/reservation-query.dto";
 import { Paginated } from "src/lib/types/Paginated";
+import { plainToClass, plainToInstance } from "class-transformer";
+import { User } from "src/users/entities/user.entity";
+import { Role } from "src/auth/role.enum";
 
 @Injectable()
 export class ReservationsService {
@@ -39,7 +42,7 @@ export class ReservationsService {
   }
 
   async findOne(id: string): Promise<Reservation> {
-    return this.reservationRepository.findOneBy({ id });
+    return entityOrFail(this.reservationRepository.findOneBy({ id }));
   }
 
   async findOneByOpts(opts: Omit<ReservationQueryDto, 'limit'>) {
@@ -111,8 +114,7 @@ export class ReservationsService {
     if(availableSlots.length == 0 || availableSlots[0].slots.length == 0) {
       throw new BadRequestException(`No available slots for machine instance ${createReservationDto.machineInstanceId} at ${createReservationDto.startTime}`);
     }
-    let reservation: Reservation = {
-      id: undefined,
+    let reservation = plainToInstance(Reservation, {
       startTime: createReservationDto.startTime,
       endTime,
       status: ReservationStatus.PENDING,
@@ -120,10 +122,24 @@ export class ReservationsService {
       machineInstance,
       programme,
       user,
-    };
+    });
 
     reservation = await this.reservationRepository.save(reservation);
     this.mailService.sendReservationConfirmation(reservation);
     return reservation;
+  }
+
+  async cancel(user: User, id: string) {
+    const reservation = await this.findOne(id);
+    if(user.role != Role.Admin && reservation.user.id != user.id) {
+      throw new ForbiddenException(`Nu puteti anula o rezervare care nu vă aparține.`);
+    }
+    if(reservation.status != ReservationStatus.PENDING) {
+      throw new BadRequestException(`Rezervarea nu poate fi anulată.`);
+    }
+    reservation.status = ReservationStatus.CANCELLED;
+    reservation.meta.cancelledAt = new Date();
+    reservation.meta.cancelledBy = user.role;
+    return this.reservationRepository.save(reservation);
   }
 }

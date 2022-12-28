@@ -20,6 +20,11 @@ export class ReservationsController {
     return this.reservationsService.create(createReservationDto);
   }
 
+  @Post(":id/cancel")
+  async cancel(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.reservationsService.cancel(user, id);
+  }
+
   @Get("/available-slots/programme/:id")
   async findAvailableSlots(@Param("id") programmeId: string) {
     return this.reservationsService.findAvailableSlots(new Date(), undefined, programmeId);

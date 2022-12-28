@@ -1,10 +1,23 @@
-import * as mongoose from 'mongoose';
+import { Type } from 'class-transformer';
+import { Role } from 'src/auth/role.enum';
 import { MachineInstance } from 'src/machines/enitities/machine-instance.entity';
 import { Programme } from 'src/machines/enitities/programme.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
-export type ReservationDocument = mongoose.HydratedDocument<Reservation>;
+class ReservationMeta {
+  @Type(() => Date)
+  checkInTime?: Date;
+
+  @Type(() => Date)
+  checkOutTime?: Date;
+
+  @Type(() => Date)
+  cancelledAt?: Date;
+
+  cancelledBy?: Role;
+
+}
 
 @Entity()
 export class Reservation {
@@ -31,7 +44,16 @@ export class Reservation {
   status: ReservationStatus;
 
   @Column("simple-json")
+  @Type(() => ReservationMeta)
   meta: ReservationMeta;
+
+  get isPending(): boolean {
+    return this.status === ReservationStatus.PENDING || this.status === ReservationStatus.CHECKED_IN;
+  }
+
+  get isPast(): boolean {
+    return [ReservationStatus.FINISHED, ReservationStatus.CANCELLED, ReservationStatus.NOT_HONORED].includes(this.status);
+  }
   
 }
 
@@ -43,6 +65,4 @@ export enum ReservationStatus {
   NOT_HONORED = "NOT_HONORED",
 }
 
-interface ReservationMeta {
-  checkInTime?: Date;
-}
+
