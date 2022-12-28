@@ -49,7 +49,11 @@ export class UsersService {
   }
 
   async findOneByEmail(email: string) {
-    return this.usersRepository.findOne({ where: { email }, select: { password: true }});
+    return this.usersRepository.findOne({ 
+      where: { email },
+      select: ['id', 'firstName', 'lastName', 'email', 'phone', 'password', 'role']
+    });
+
   }
 
   async delete(id: string) {
