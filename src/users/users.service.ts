@@ -49,7 +49,7 @@ export class UsersService {
   }
 
   async findOneByEmail(email: string) {
-    return this.usersRepository.findOneBy({ email });
+    return this.usersRepository.findOne({ where: { email }, select: { password: true }});
   }
 
   async delete(id: string) {
