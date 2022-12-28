@@ -21,7 +21,10 @@ import { join } from 'path';
       },
       template: {
         dir: join(__dirname, 'templates'),
-        adapter: new HandlebarsAdapter(),
+        adapter: new HandlebarsAdapter({
+          dateFormat: (date: Date) => date.toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' }),
+          timeFormat: (date: Date) => date.toLocaleTimeString('ro-RO', { hour: 'numeric', minute: 'numeric' }),
+        }),
         options: {
           strict: true,
         },

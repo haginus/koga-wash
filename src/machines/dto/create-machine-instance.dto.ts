@@ -5,5 +5,9 @@ export class CreateMachineInstanceDto {
   @IsNotEmpty()
   @IsString()
   machineId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  name: string;
   
 }

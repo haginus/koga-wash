@@ -1,7 +1,7 @@
 import { Type } from "class-transformer";
 import { ArrayNotEmpty, IsEnum, IsNotEmpty, ValidateNested } from "class-validator";
-import { DryerMachine } from "../schemas/dryer-machine.schema";
-import { WashingMachine } from "../schemas/washing-machine.schema";
+import { DryerMachine } from "../enitities/dryer-machine.entity";
+import { WashingMachine } from "../enitities/washing-machine.entity";
 import { ProgrammeRequestDto } from "./programme-request.dto";
 
 export class CreateMachineDto {

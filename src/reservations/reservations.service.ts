@@ -9,6 +9,7 @@ import { MoreThanOrEqual } from "typeorm";
 import { Programme } from "src/machines/enitities/programme.entity";
 import { ProgrammesService } from "src/machines/programmes.service";
 import { UsersService } from "src/users/users.service";
+import { MailService } from "src/mail/mail.service";
 
 @Injectable()
 export class ReservationsService {
@@ -17,6 +18,7 @@ export class ReservationsService {
     private readonly machineInstancesService: MachineInstancesService,
     private readonly programmesService: ProgrammesService,
     private readonly usersService: UsersService,
+    private readonly mailService: MailService,
   ) {}
 
   async findAll(): Promise<Reservation[]> {
@@ -100,7 +102,8 @@ export class ReservationsService {
     if(availableSlots.length == 0 || availableSlots[0].slots.length == 0) {
       throw new BadRequestException(`No available slots for machine instance ${createReservationDto.machineInstanceId} at ${createReservationDto.startTime}`);
     }
-    const reservation: Omit<Reservation, 'id'> = {
+    let reservation: Reservation = {
+      id: undefined,
       startTime: createReservationDto.startTime,
       endTime,
       status: ReservationStatus.PENDING,
@@ -110,6 +113,8 @@ export class ReservationsService {
       user,
     };
 
-    return this.reservationRepository.save(reservation);
+    reservation = await this.reservationRepository.save(reservation);
+    this.mailService.sendReservationConfirmation(reservation);
+    return reservation;
   }
 }
