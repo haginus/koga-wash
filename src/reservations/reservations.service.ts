@@ -12,9 +12,10 @@ import { UsersService } from "src/users/users.service";
 import { MailService } from "src/mail/mail.service";
 import { ReservationQueryDto } from "./dto/reservation-query.dto";
 import { Paginated } from "src/lib/types/Paginated";
-import { plainToClass, plainToInstance } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { User } from "src/users/entities/user.entity";
 import { Role } from "src/auth/role.enum";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
 @Injectable()
 export class ReservationsService {
@@ -24,9 +25,11 @@ export class ReservationsService {
     private readonly programmesService: ProgrammesService,
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
-  private ownsReservationGuard(user: User, reservation: Reservation, passAdmin = false) {
+  private ownsReservationGuard(user: User | null, reservation: Reservation, passAdmin = false) {
+    if(!user) return;
     if(user.id != reservation.user.id) {
       if(user.role == Role.Admin && passAdmin) {
         return;
@@ -45,6 +48,9 @@ export class ReservationsService {
     }
     if(opts?.until) {
       where.endTime = LessThanOrEqual(opts.until);
+    }
+    if(opts?.status) {
+      where.status = opts.status;
     }
     const [data, count] = await this.reservationRepository.findAndCount({ where, take: opts?.limit, skip: opts?.offset });
     return { data, count };
@@ -139,6 +145,7 @@ export class ReservationsService {
 
     reservation = await this.reservationRepository.save(reservation);
     this.mailService.sendReservationConfirmation(reservation);
+    this.eventEmitter.emit('reservation.created', reservation);
     return reservation;
   }
 
@@ -154,17 +161,28 @@ export class ReservationsService {
     return this.reservationRepository.save(reservation);
   }
 
+  async cancelAsNotHonored(id: string) {
+    const reservation = await this.findOne(id);
+    reservation.status = ReservationStatus.NOT_HONORED;
+    reservation.meta.cancelledAt = new Date();
+    reservation.meta.cancelledBy = Role.System;
+    return this.reservationRepository.save(reservation);
+  }
+
   async checkIn(user: User, id: string) {
     const reservation = await this.findOne(id);
     this.ownsReservationGuard(user, reservation);
-    if(reservation.status != ReservationStatus.PENDING) {
+    const timeCheck = Math.abs(reservation.startTime.getTime() - Date.now()) <= 5 * 60 * 1000;
+    if(reservation.status != ReservationStatus.PENDING || !timeCheck) {
       throw new BadRequestException(`Nu se poate face check-in la această rezervare.`);
     }
     reservation.status = ReservationStatus.CHECKED_IN;
     reservation.meta.checkedInAt = new Date();
     // TODO: turn on machine
     // TODO: set timer to turn off machine
-    return this.reservationRepository.save(reservation);
+    const result = this.reservationRepository.save(reservation);
+    this.eventEmitter.emit('reservation.checkedIn', result);
+    return result;
   }
 
   async checkOut(user: User, id: string) {

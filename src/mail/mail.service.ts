@@ -27,4 +27,24 @@ export class MailService {
     });
   }
 
+  async sendReservationStartReminder(reservation: Reservation) {
+    const minutes = Math.round((reservation.startTime.getTime() - Date.now()) / 1000 / 60);
+    await this.mailerService.sendMail({
+      to: reservation.user.email,
+      subject: 'Rezervarea ta se apropie',
+      template: './reservation-start-reminder',
+      context: { reservation, minutes },
+    });
+  }
+
+  async sendReservationEndReminder(reservation: Reservation) {
+    const minutes = Math.round((reservation.endTime.getTime() - Date.now()) / 1000 / 60);
+    await this.mailerService.sendMail({
+      to: reservation.user.email,
+      subject: 'Programul se apropie de sfârșit',
+      template: './reservation-end-reminder',
+      context: { reservation, minutes },
+    });
+  }
+
 }
