@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
+import { Role } from "src/auth/role.enum";
 import { User } from "src/users/entities/user.entity";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { ReservationQueryDto } from "./dto/reservation-query.dto";
@@ -16,14 +17,20 @@ export class ReservationsController {
   }
 
   @Get()
-  async findAll(@Query() query: ReservationQueryDto) {
+  async findAll(@Query() query: ReservationQueryDto = {}, @CurrentUser() user: User) {
+    if(user.role != Role.Admin) query.userId = user.id;
     return this.reservationsService.findAll(query);
   }
 
   @Post()
   async create(@Body() createReservationDto: CreateReservationDto, @CurrentUser() user: User) {
-    createReservationDto.userId = user.id;
+    if(user.role != Role.Admin) createReservationDto.userId = user.id;
     return this.reservationsService.create(createReservationDto);
+  }
+
+  @Get(":id")
+  async findOne(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.reservationsService.findOne(id, user);
   }
 
   @Post(":id/cancel")

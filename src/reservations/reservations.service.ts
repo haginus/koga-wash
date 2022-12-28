@@ -26,6 +26,15 @@ export class ReservationsService {
     private readonly mailService: MailService,
   ) {}
 
+  private ownsReservationGuard(user: User, reservation: Reservation, passAdmin = false) {
+    if(user.id != reservation.user.id) {
+      if(user.role == Role.Admin && passAdmin) {
+        return;
+      }
+      throw new ForbiddenException(`Nu puteți accesa această rezervare.`);
+    }
+  }
+
   async findAll(opts?: ReservationQueryDto): Promise<Paginated<Reservation>> {
     const where: FindOptionsWhere<Reservation> = {};
     if(opts?.instanceId) {
@@ -41,8 +50,12 @@ export class ReservationsService {
     return { data, count };
   }
 
-  async findOne(id: string): Promise<Reservation> {
-    return entityOrFail(this.reservationRepository.findOneBy({ id }));
+  async findOne(id: string, user?: User): Promise<Reservation> {
+    const reservation = await entityOrFail(this.reservationRepository.findOneBy({ id }));
+    if(user) {
+      this.ownsReservationGuard(user, reservation);
+    }
+    return reservation;
   }
 
   async findOneByOpts(opts: Omit<ReservationQueryDto, 'limit'>) {
@@ -128,16 +141,6 @@ export class ReservationsService {
     this.mailService.sendReservationConfirmation(reservation);
     return reservation;
   }
-
-  private ownsReservationGuard(user: User, reservation: Reservation, passAdmin = false) {
-    if(user.id != reservation.user.id) {
-      if(user.role == Role.Admin && passAdmin) {
-        return;
-      }
-      throw new ForbiddenException(`Nu puteți accesa această rezervare.`);
-    }
-  }
-
 
   async cancel(user: User, id: string) {
     const reservation = await this.findOne(id);
