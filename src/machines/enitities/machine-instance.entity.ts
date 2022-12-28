@@ -11,7 +11,10 @@ export class MachineInstance {
   @Column()
   name: string;
 
-  @ManyToOne(() => Machine, (machine) => machine.instances)
+  @Column({ default: false })
+  isFaulty: boolean;
+
+  @ManyToOne(() => Machine, (machine) => machine.instances, { eager: true })
   machine: Machine;
 
   @OneToMany(() => Reservation, (reservation) => reservation.machineInstance)

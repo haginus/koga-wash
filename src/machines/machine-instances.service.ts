@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { CreateMachineInstanceDto } from "./dto/create-machine-instance.dto";
+import { MachineInstanceRequestDto } from "./dto/machine-instance-request.dto";
 import { MachineInstance } from "./enitities/machine-instance.entity";
 import { MachinesService } from "./machines.service";
 
@@ -18,7 +18,7 @@ export class MachineInstancesService {
     return this.machineRepository.find();
   }
 
-  async create(machineInstanceDto: CreateMachineInstanceDto) {
+  async create(machineInstanceDto: MachineInstanceRequestDto) {
     const machine = await this.machinesService.findOne(machineInstanceDto.machineId);
     if(!machine) {
       throw new NotFoundException(`Machine with id ${machineInstanceDto.machineId} not found`);

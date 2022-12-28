@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post } from "@nestjs/common";
-import { CreateMachineInstanceDto } from "./dto/create-machine-instance.dto";
+import { MachineInstanceRequestDto } from "./dto/machine-instance-request.dto";
 import { MachineInstancesService } from "./machine-instances.service";
 
 @Controller("instances")
@@ -12,7 +12,7 @@ export class MachineInstancesController {
   }
 
   @Post()
-  async create(@Body() createMachineInstanceDto: CreateMachineInstanceDto) {
+  async create(@Body() createMachineInstanceDto: MachineInstanceRequestDto) {
     return this.machineInstacesService.create(createMachineInstanceDto);
   }
 }

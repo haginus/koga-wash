@@ -15,7 +15,7 @@ export abstract class Machine {
   @Column()
   model: string;
 
-  @OneToMany(type => MachineInstance, instance => instance.machine, { eager: true })
+  @OneToMany(type => MachineInstance, instance => instance.machine)
   instances: MachineInstance[];
 
   @OneToMany(type => Programme, instance => instance.machine, { eager: true })

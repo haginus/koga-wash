@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
-import { CreateMachineDto } from "./dto/create-machine.dto";
+import { MachineRequestDto } from "./dto/machine-request.dto";
 import { MachinesService } from "./machines.service";
 import { ProgrammesService } from "./programmes.service";
 
@@ -16,7 +16,7 @@ export class MachinesController {
   }
 
   @Post()
-  async create(@Body() createMachineDto: CreateMachineDto) {
+  async create(@Body() createMachineDto: MachineRequestDto) {
     return this.machinesService.create(createMachineDto);
   }
 

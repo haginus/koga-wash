@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { InjectRepository } from "@nestjs/typeorm";
 import { roundToNearest10 } from "src/lib/util";
 import { MachineInstancesService } from "src/machines/machine-instances.service";
-import { Repository } from "typeorm";
+import { FindOptionsWhere, LessThanOrEqual, Repository } from "typeorm";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { Reservation, ReservationStatus } from "./entities/reservation.entity";
 import { MoreThanOrEqual } from "typeorm";
@@ -10,6 +10,8 @@ import { Programme } from "src/machines/enitities/programme.entity";
 import { ProgrammesService } from "src/machines/programmes.service";
 import { UsersService } from "src/users/users.service";
 import { MailService } from "src/mail/mail.service";
+import { ReservationQueryDto } from "./dto/reservation-query.dto";
+import { Paginated } from "src/lib/types/Paginated";
 
 @Injectable()
 export class ReservationsService {
@@ -21,20 +23,28 @@ export class ReservationsService {
     private readonly mailService: MailService,
   ) {}
 
-  async findAll(): Promise<Reservation[]> {
-    return this.reservationRepository.find();
-  }
-
-  async findAllSince(startTime: Date) {
-    return this.reservationRepository.findBy({ startTime: MoreThanOrEqual(startTime) });
-  }
-
-  async findAllForMachineInstanceSince(machineInstanceId: string, startTime: Date) {
-    return this.reservationRepository.findBy({ machineInstance: { id: machineInstanceId }, startTime: MoreThanOrEqual(startTime) });
+  async findAll(opts?: ReservationQueryDto): Promise<Paginated<Reservation>> {
+    const where: FindOptionsWhere<Reservation> = {};
+    if(opts?.instanceId) {
+      where.machineInstance = { id: opts.instanceId };
+    }
+    if(opts?.since) {
+      where.startTime = MoreThanOrEqual(opts.since);
+    }
+    if(opts?.until) {
+      where.endTime = LessThanOrEqual(opts.until);
+    }
+    const [data, count] = await this.reservationRepository.findAndCount({ where, take: opts?.limit, skip: opts?.offset });
+    return { data, count };
   }
 
   async findOne(id: string): Promise<Reservation> {
     return this.reservationRepository.findOneBy({ id });
+  }
+
+  async findOneByOpts(opts: Omit<ReservationQueryDto, 'limit'>) {
+    const result = await this.findAll({ ...opts, limit: 1 });
+    return result.data[0];
   }
 
   getAvailableSlots(startTime: Date, _endTime: Date | undefined, reservations: Reservation[], programme: Programme) {
@@ -61,21 +71,20 @@ export class ReservationsService {
     return slots;
   }
 
-  async findAvailableSlots(startTime: Date, endTime: Date | undefined, programmeId: string, machineInstanceId?: string) {
+  async findAvailableSlots(startTime: Date, endTime: Date | undefined, programmeId: string, instanceId?: string) {
 
     const programme = await this.programmesService.findOne(programmeId);
 
-    const reservations = machineInstanceId ? 
-      await this.findAllForMachineInstanceSince(machineInstanceId, startTime) : 
-      await this.findAllSince(startTime);
+    const reservations = (await this.findAll({ since: startTime, until: endTime, instanceId })).data;
     
-    const instances = machineInstanceId ? 
-      [await this.machineInstancesService.findOne(machineInstanceId)] : 
+    const instances = instanceId ? 
+      [await this.machineInstancesService.findOne(instanceId)] : 
       await this.machineInstancesService.findAll();
     
     return instances.map(instance => {
       const instanceReservations = reservations.filter(reservation => reservation.machineInstance.id == instance.id);
       const instanceSlots = this.getAvailableSlots(startTime, endTime, instanceReservations, programme);
+      delete instance.machine.programmes;
       return { instance, slots: instanceSlots };
     });
 

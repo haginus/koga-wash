@@ -1,27 +1,22 @@
 import { Injectable } from "@nestjs/common";
-import { CreateMachineDto } from "./dto/create-machine.dto";
+import { MachineRequestDto } from "./dto/machine-request.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Machine } from "./enitities/machine.entity";
-import { Programme } from "./enitities/programme.entity";
 
 @Injectable()
 export class MachinesService {
-  constructor(
-    @InjectRepository(Machine) private machineRepository: Repository<Machine>,
-    @InjectRepository(Programme) private programmeRepository: Repository<Programme>,
-  ) {}
+  constructor(@InjectRepository(Machine) private machineRepository: Repository<Machine>) {}
 
   async findAll(): Promise<Machine[]> {
-    return this.machineRepository.find();
+    return this.machineRepository.find({ relations: ['instances']});
   }
 
   async findOne(id: string): Promise<Machine> {
-    return this.machineRepository.findOneBy({ id });
+    return this.machineRepository.findOne({ where: { id }, relations: ['instances']});
   }
 
-  async create(machineDto: CreateMachineDto) {
-
-    return this.machineRepository.save(machineDto as any);
+  async create(machineDto: MachineRequestDto) {
+    return this.machineRepository.save(machineDto);
   }
 }
