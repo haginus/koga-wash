@@ -12,13 +12,13 @@ export class Reservation {
   @PrimaryGeneratedColumn('uuid')
   id: string;
   
-  @ManyToOne(() => MachineInstance, (machineInstance) => machineInstance.reservations)
+  @ManyToOne(() => MachineInstance, (machineInstance) => machineInstance.reservations, { eager: true })
   machineInstance: MachineInstance;
 
-  @ManyToOne(() => User, (user) => user.reservations)
+  @ManyToOne(() => User, (user) => user.reservations, { eager: true })
   user: User;
 
-  @ManyToOne(() => Programme, (programme) => programme.reservations)
+  @ManyToOne(() => Programme, (programme) => programme.reservations, { eager: true })
   programme: Programme;
 
   @Column()

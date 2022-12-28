@@ -8,6 +8,7 @@ import { Reservation, ReservationStatus } from "./entities/reservation.entity";
 import { MoreThanOrEqual } from "typeorm";
 import { Programme } from "src/machines/enitities/programme.entity";
 import { ProgrammesService } from "src/machines/programmes.service";
+import { UsersService } from "src/users/users.service";
 
 @Injectable()
 export class ReservationsService {
@@ -15,6 +16,7 @@ export class ReservationsService {
     @InjectRepository(Reservation) private reservationRepository: Repository<Reservation>,
     private readonly machineInstancesService: MachineInstancesService,
     private readonly programmesService: ProgrammesService,
+    private readonly usersService: UsersService,
   ) {}
 
   async findAll(): Promise<Reservation[]> {
@@ -78,6 +80,7 @@ export class ReservationsService {
   }
 
   async create(createReservationDto: CreateReservationDto) {
+    const user = await this.usersService.findOne(createReservationDto.userId);
     const machineInstance = await this.machineInstancesService.findOne(createReservationDto.machineInstanceId);
     if(!machineInstance) {
       throw new NotFoundException(`Machine instance with id ${createReservationDto.machineInstanceId} not found`);
@@ -97,6 +100,16 @@ export class ReservationsService {
     if(availableSlots.length == 0 || availableSlots[0].slots.length == 0) {
       throw new BadRequestException(`No available slots for machine instance ${createReservationDto.machineInstanceId} at ${createReservationDto.startTime}`);
     }
-    return this.reservationRepository.save({ ...createReservationDto, endTime, status: ReservationStatus.PENDING, meta: { } });
+    const reservation: Omit<Reservation, 'id'> = {
+      startTime: createReservationDto.startTime,
+      endTime,
+      status: ReservationStatus.PENDING,
+      meta: {},
+      machineInstance,
+      programme,
+      user,
+    };
+
+    return this.reservationRepository.save(reservation);
   }
 }
