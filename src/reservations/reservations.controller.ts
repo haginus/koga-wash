@@ -15,7 +15,7 @@ export class ReservationsController {
 
   @Post()
   async create(@Body() createReservationDto: CreateReservationDto, @CurrentUser() user: User) {
-    createReservationDto.user = user.id;
+    createReservationDto.userId = user.id;
     return this.reservationsService.create(createReservationDto);
   }
 

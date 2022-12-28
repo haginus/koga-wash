@@ -24,8 +24,4 @@ export class MachinesService {
 
     return this.machineRepository.save(machineDto as any);
   }
-
-  async findProgrammeById(id: string) {
-    return this.programmeRepository.findOneBy({ id });
-  }
 }

@@ -1,10 +1,14 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { CreateMachineDto } from "./dto/create-machine.dto";
 import { MachinesService } from "./machines.service";
+import { ProgrammesService } from "./programmes.service";
 
 @Controller("machines")
 export class MachinesController {
-  constructor(private readonly machinesService: MachinesService) {}
+  constructor(
+    private readonly machinesService: MachinesService,
+    private readonly programmesService: ProgrammesService,
+  ) {}
 
   @Get()
   async findAll() {
@@ -16,8 +20,8 @@ export class MachinesController {
     return this.machinesService.create(createMachineDto);
   }
 
-  @Get("/programmes/:id")
-  async findProgrammeById(@Param("id") id: string) {
-    return this.machinesService.findProgrammeById(id);
+  @Get(":id/programmes")
+  async findProgrammes(@Param("id") id: string) {
+    return this.programmesService.findAllByMachineId(id);
   }
 }

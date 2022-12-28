@@ -2,19 +2,19 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { InjectRepository } from "@nestjs/typeorm";
 import { roundToNearest10 } from "src/lib/util";
 import { MachineInstancesService } from "src/machines/machine-instances.service";
-import { MachinesService } from "src/machines/machines.service";
 import { Repository } from "typeorm";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { Reservation, ReservationStatus } from "./entities/reservation.entity";
 import { MoreThanOrEqual } from "typeorm";
 import { Programme } from "src/machines/enitities/programme.entity";
+import { ProgrammesService } from "src/machines/programmes.service";
 
 @Injectable()
 export class ReservationsService {
   constructor(
     @InjectRepository(Reservation) private reservationRepository: Repository<Reservation>,
     private readonly machineInstancesService: MachineInstancesService,
-    private readonly machinesService: MachinesService
+    private readonly programmesService: ProgrammesService,
   ) {}
 
   async findAll(): Promise<Reservation[]> {
@@ -26,7 +26,6 @@ export class ReservationsService {
   }
 
   async findAllForMachineInstanceSince(machineInstanceId: string, startTime: Date) {
-    // @ts-ignore
     return this.reservationRepository.findBy({ machineInstance: { id: machineInstanceId }, startTime: MoreThanOrEqual(startTime) });
   }
 
@@ -58,34 +57,34 @@ export class ReservationsService {
     return slots;
   }
 
-  async findAvailableSlots(startTime: Date, endTime: Date | undefined, programme: string, machineInstance?: string) {
+  async findAvailableSlots(startTime: Date, endTime: Date | undefined, programmeId: string, machineInstanceId?: string) {
 
-    const programmeInstance = await this.machinesService.findProgrammeById(programme);
+    const programme = await this.programmesService.findOne(programmeId);
 
-    const reservations = machineInstance ? 
-      await this.findAllForMachineInstanceSince(machineInstance, startTime) : 
+    const reservations = machineInstanceId ? 
+      await this.findAllForMachineInstanceSince(machineInstanceId, startTime) : 
       await this.findAllSince(startTime);
     
-    const instances = machineInstance ? 
-      [await this.machineInstancesService.findOne(machineInstance as any)] : 
+    const instances = machineInstanceId ? 
+      [await this.machineInstancesService.findOne(machineInstanceId)] : 
       await this.machineInstancesService.findAll();
     
     return instances.map(instance => {
-      const instanceReservations = reservations.filter(reservation => reservation.machineInstance.id == instance.id.toString());
-      const instanceSlots = this.getAvailableSlots(startTime, endTime, instanceReservations, programmeInstance);
+      const instanceReservations = reservations.filter(reservation => reservation.machineInstance.id == instance.id);
+      const instanceSlots = this.getAvailableSlots(startTime, endTime, instanceReservations, programme);
       return { instance, slots: instanceSlots };
     });
 
   }
 
   async create(createReservationDto: CreateReservationDto) {
-    const machineInstance = await this.machineInstancesService.findOne(createReservationDto.machineInstance);
+    const machineInstance = await this.machineInstancesService.findOne(createReservationDto.machineInstanceId);
     if(!machineInstance) {
-      throw new NotFoundException(`Machine instance with id ${createReservationDto.machineInstance} not found`);
+      throw new NotFoundException(`Machine instance with id ${createReservationDto.machineInstanceId} not found`);
     }
-    const programme = await this.machinesService.findProgrammeById(createReservationDto.programme);
+    const programme = await this.programmesService.findOne(createReservationDto.programmeId);
     if(!programme) {
-      throw new NotFoundException(`Programme with id ${createReservationDto.programme} not found`);
+      throw new NotFoundException(`Programme with id ${createReservationDto.programmeId} not found`);
     }
     if(createReservationDto.startTime.getTime() < Date.now()) {
       throw new BadRequestException(`Start time must be in the future`);
@@ -94,11 +93,10 @@ export class ReservationsService {
       throw new BadRequestException(`Start time must be a multiple of 10 minutes`);
     }
     const endTime = new Date(createReservationDto.startTime.getTime() + programme.duration * 60 * 1000);
-    const availableSlots = await this.findAvailableSlots(createReservationDto.startTime, endTime, createReservationDto.programme, createReservationDto.machineInstance);
+    const availableSlots = await this.findAvailableSlots(createReservationDto.startTime, endTime, createReservationDto.programmeId, createReservationDto.machineInstanceId);
     if(availableSlots.length == 0 || availableSlots[0].slots.length == 0) {
-      throw new BadRequestException(`No available slots for machine instance ${createReservationDto.machineInstance} at ${createReservationDto.startTime}`);
+      throw new BadRequestException(`No available slots for machine instance ${createReservationDto.machineInstanceId} at ${createReservationDto.startTime}`);
     }
-    // const createdReservation = new this.reservationModel({ ...createReservationDto, endTime, status: ReservationStatus.PENDING });
-    // return createdReservation.save();
+    return this.reservationRepository.save({ ...createReservationDto, endTime, status: ReservationStatus.PENDING, meta: { } });
   }
 }

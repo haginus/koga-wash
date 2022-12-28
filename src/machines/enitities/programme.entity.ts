@@ -14,7 +14,7 @@ export class Programme {
   @Column()
   wheelIndex: number;
 
-  @Column()
+  @Column({ nullable: true })
   description: string;
 
   /** Duration of the programme in minutes. */

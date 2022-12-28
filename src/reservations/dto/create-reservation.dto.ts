@@ -5,15 +5,15 @@ export class CreateReservationDto {
 
   @IsString()
   @IsNotEmpty()
-  user: string;
+  userId: string;
 
   @IsString()
   @IsNotEmpty()
-  machineInstance: string;
+  machineInstanceId: string;
 
   @IsString()
   @IsNotEmpty()
-  programme: string;
+  programmeId: string;
 
   // @IsDateString()
   @Type(() => Date)

@@ -29,6 +29,9 @@ export class Reservation {
 
   @Column()
   status: ReservationStatus;
+
+  @Column("simple-json")
+  meta: ReservationMeta;
   
 }
 
@@ -38,4 +41,8 @@ export enum ReservationStatus {
   FINISHED = "FINISHED",
   CANCELLED = "CANCELLED",
   NOT_HONORED = "NOT_HONORED",
+}
+
+interface ReservationMeta {
+  checkInTime?: Date;
 }
