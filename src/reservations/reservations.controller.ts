@@ -9,6 +9,12 @@ import { ReservationsService } from "./reservations.service";
 export class ReservationsController {
   constructor(private readonly reservationsService: ReservationsService) {}
 
+
+  @Get("/available-slots/programme/:id")
+  async findAvailableSlots(@Param("id") programmeId: string) {
+    return this.reservationsService.findAvailableSlots(new Date(), undefined, programmeId);
+  }
+
   @Get()
   async findAll(@Query() query: ReservationQueryDto) {
     return this.reservationsService.findAll(query);
@@ -25,8 +31,14 @@ export class ReservationsController {
     return this.reservationsService.cancel(user, id);
   }
 
-  @Get("/available-slots/programme/:id")
-  async findAvailableSlots(@Param("id") programmeId: string) {
-    return this.reservationsService.findAvailableSlots(new Date(), undefined, programmeId);
+  @Post(":id/check-in")
+  async checkIn(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.reservationsService.checkIn(user, id);
   }
+
+  @Post(":id/check-out")
+  async checkOut(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.reservationsService.checkOut(user, id);
+  }
+  
 }

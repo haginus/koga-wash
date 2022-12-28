@@ -129,12 +129,20 @@ export class ReservationsService {
     return reservation;
   }
 
+  private ownsReservationGuard(user: User, reservation: Reservation, passAdmin = false) {
+    if(user.id != reservation.user.id) {
+      if(user.role == Role.Admin && passAdmin) {
+        return;
+      }
+      throw new ForbiddenException(`Nu puteți accesa această rezervare.`);
+    }
+  }
+
+
   async cancel(user: User, id: string) {
     const reservation = await this.findOne(id);
-    if(user.role != Role.Admin && reservation.user.id != user.id) {
-      throw new ForbiddenException(`Nu puteti anula o rezervare care nu vă aparține.`);
-    }
-    if(reservation.status != ReservationStatus.PENDING) {
+    this.ownsReservationGuard(user, reservation, true);
+    if(!reservation.isPending) {
       throw new BadRequestException(`Rezervarea nu poate fi anulată.`);
     }
     reservation.status = ReservationStatus.CANCELLED;
@@ -142,4 +150,30 @@ export class ReservationsService {
     reservation.meta.cancelledBy = user.role;
     return this.reservationRepository.save(reservation);
   }
+
+  async checkIn(user: User, id: string) {
+    const reservation = await this.findOne(id);
+    this.ownsReservationGuard(user, reservation);
+    if(reservation.status != ReservationStatus.PENDING) {
+      throw new BadRequestException(`Nu se poate face check-in la această rezervare.`);
+    }
+    reservation.status = ReservationStatus.CHECKED_IN;
+    reservation.meta.checkedInAt = new Date();
+    // TODO: turn on machine
+    // TODO: set timer to turn off machine
+    return this.reservationRepository.save(reservation);
+  }
+
+  async checkOut(user: User, id: string) {
+    const reservation = await this.findOne(id);
+    this.ownsReservationGuard(user, reservation);
+    if(reservation.status != ReservationStatus.CHECKED_IN) {
+      throw new BadRequestException(`Nu se poate face check-out la această rezervare.`);
+    }
+    reservation.status = ReservationStatus.FINISHED;
+    reservation.meta.checkedOutAt = new Date();
+    // TODO: turn off machine
+    return this.reservationRepository.save(reservation);
+  }
+
 }

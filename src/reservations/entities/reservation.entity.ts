@@ -7,10 +7,10 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 class ReservationMeta {
   @Type(() => Date)
-  checkInTime?: Date;
+  checkedInAt?: Date;
 
   @Type(() => Date)
-  checkOutTime?: Date;
+  checkedOutAt?: Date;
 
   @Type(() => Date)
   cancelledAt?: Date;
