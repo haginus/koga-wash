@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Roles } from "src/auth/decorators/roles.decorator";
+import { Role } from "src/auth/role.enum";
 import { MachineRequestDto } from "./dto/machine-request.dto";
 import { MachinesService } from "./machines.service";
 import { ProgrammesService } from "./programmes.service";
@@ -16,6 +18,7 @@ export class MachinesController {
   }
 
   @Post()
+  @Roles(Role.Admin)
   async create(@Body() createMachineDto: MachineRequestDto) {
     return this.machinesService.create(createMachineDto);
   }
