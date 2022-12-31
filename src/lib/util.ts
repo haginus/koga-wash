@@ -14,3 +14,16 @@ export async function entityOrFail<T>(entityPromise: Promise<T>, message?: strin
   }
   return entity;
 }
+
+export function groupBy<T>(collection: T[], getKey: ((item: T) => string | number)) {
+  return collection.reduce((storage, item) => {
+    const group = getKey(item);
+    storage[group] = storage[group] || [];
+    storage[group].push(item); 
+    return storage;
+  }, {} as Record<string, T[]>);
+}
+
+export function indexArray<T = any, U = T>(arr: T[], getKey: (item: T) => string | number, getValue: (item: T) => U = (item: T) => item as any): Record<string | number, U> {
+  return arr.reduce((acc, item) => ({ ...acc, [getKey(item)]: getValue(item) }), {});
+}

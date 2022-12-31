@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { roundToNearest10, entityOrFail } from "src/lib/util";
+import { roundToNearest10, entityOrFail, groupBy, indexArray } from "src/lib/util";
 import { MachineInstancesService } from "src/machines/machine-instances.service";
 import { FindOptionsWhere, LessThanOrEqual, Repository } from "typeorm";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
@@ -16,6 +16,7 @@ import { plainToInstance } from "class-transformer";
 import { User } from "src/users/entities/user.entity";
 import { Role } from "src/auth/role.enum";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { AvailableInstancesDto } from "./dto/available-instances.dto";
 
 @Injectable()
 export class ReservationsService {
@@ -52,7 +53,12 @@ export class ReservationsService {
     if(opts?.status) {
       where.status = opts.status;
     }
-    const [data, count] = await this.reservationRepository.findAndCount({ where, take: opts?.limit, skip: opts?.offset });
+    const [data, count] = await this.reservationRepository.findAndCount({ 
+      where,
+      order: { startTime: 'ASC' },
+      take: opts?.limit,
+      skip: opts?.offset
+    });
     return { data, count };
   }
 
@@ -67,6 +73,18 @@ export class ReservationsService {
   async findOneByOpts(opts: Omit<ReservationQueryDto, 'limit'>) {
     const result = await this.findAll({ ...opts, limit: 1 });
     return result.data[0];
+  }
+
+  async findPreviousReservation(reservation: Reservation): Promise<Reservation | undefined> {
+    const list = this.reservationRepository.find({ 
+      where: { 
+        machineInstance: { id: reservation.machineInstance.id },
+        endTime: LessThanOrEqual(reservation.startTime)
+      },
+      order: { endTime: 'DESC' }, 
+      take: 1
+    });
+    return list[0];
   }
 
   getAvailableSlots(startTime: Date, _endTime: Date | undefined, reservations: Reservation[], programme: Programme) {
@@ -97,19 +115,56 @@ export class ReservationsService {
 
     const programme = await this.programmesService.findOne(programmeId);
 
-    const reservations = (await this.findAll({ since: startTime, until: endTime, instanceId })).data;
+    const reservations = (await this.findAll({ since: startTime, until: endTime })).data.filter(r => r.isPending);
+    const groupedReservations = groupBy(reservations, r => r.machineInstance.id);
     
     const instances = instanceId ? 
       [await this.machineInstancesService.findOne(instanceId)] : 
       await this.machineInstancesService.findAll();
     
     return instances.map(instance => {
-      const instanceReservations = reservations.filter(reservation => reservation.machineInstance.id == instance.id);
+      const instanceReservations = groupedReservations[instance.id] || [];
       const instanceSlots = this.getAvailableSlots(startTime, endTime, instanceReservations, programme);
       delete instance.machine.programmes;
       return { instance, slots: instanceSlots };
     });
 
+  }
+
+  async findAvailableInstances(): Promise<AvailableInstancesDto[]> {
+    const now = new Date();
+    const EIGHTY_MINUTES = 80 * 60 * 1000;
+    const endTime = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const instances = await this.machineInstancesService.findAll();
+    const reservations = (await this.findAll({ 
+      since: new Date(now.getTime() - 2 * 60 * 60 * 1000), 
+      until: endTime,
+      limit: 10000
+    })).data.filter(reservation => reservation.isPending);
+    const groupedReservations = groupBy(reservations, reservation => reservation.machineInstance.id);
+    return instances.map((instance) => {
+      const reservations = groupedReservations[instance.id] || [];
+      const nowReservationIdx = reservations.findIndex(reservation => reservation.containsTime(now));
+      if(nowReservationIdx != -1) {
+        const sliced = reservations.slice(nowReservationIdx);
+        const lastReservation = reservations.find((reservation, idx) => 
+          reservation.startTime.getTime() + EIGHTY_MINUTES > sliced[idx - 1]?.endTime.getTime());
+        return { instance, busyUntil: lastReservation?.endTime || sliced[0].endTime };
+      } else {
+        const firstReservationIdx = reservations.findIndex(reservation => reservation.startTime.getTime() > now.getTime());
+        if(firstReservationIdx == -1) {
+          return { instance, availableUntil: endTime };
+        }
+        const firstReservation = reservations[firstReservationIdx];
+        if(firstReservation.startTime.getTime() - now.getTime() > EIGHTY_MINUTES) {
+          return { instance, availableUntil: firstReservation.startTime };
+        } else {
+          const lastReservation = reservations.find((reservation, idx) => 
+            reservation.startTime.getTime() + EIGHTY_MINUTES > reservations[idx - 1]?.endTime.getTime());
+          return { instance, busyUntil: lastReservation?.endTime || endTime};
+        }
+      }
+    });
   }
 
   async create(createReservationDto: CreateReservationDto) {

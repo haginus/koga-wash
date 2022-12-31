@@ -54,6 +54,10 @@ export class Reservation {
   get isPast(): boolean {
     return [ReservationStatus.FINISHED, ReservationStatus.CANCELLED, ReservationStatus.NOT_HONORED].includes(this.status);
   }
+
+  containsTime(time: Date): boolean {
+    return time >= this.startTime && time <= this.endTime;
+  }
   
 }
 

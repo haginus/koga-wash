@@ -16,6 +16,11 @@ export class ReservationsController {
     return this.reservationsService.findAvailableSlots(new Date(), undefined, programmeId);
   }
 
+  @Get("/instances")
+  async findAvailableInstances() {
+    return this.reservationsService.findAvailableInstances();
+  }
+
   @Get()
   async findAll(@Query() query: ReservationQueryDto = {}, @CurrentUser() user: User) {
     if(user.role != Role.Admin) query.userId = user.id;
