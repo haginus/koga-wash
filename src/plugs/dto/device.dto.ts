@@ -9,6 +9,7 @@ export class DeviceDto {
   deviceHwVer: number;
   alias: string;
   deviceMac: string;
+  deviceIp: string;
   oemId: string;
   deviceModel: string;
   hwId: string;

@@ -17,6 +17,7 @@ import { User } from "src/users/entities/user.entity";
 import { Role } from "src/auth/role.enum";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { AvailableInstancesDto } from "./dto/available-instances.dto";
+import { PlugsService } from "src/plugs/plugs.service";
 
 @Injectable()
 export class ReservationsService {
@@ -26,7 +27,8 @@ export class ReservationsService {
     private readonly programmesService: ProgrammesService,
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
-    private eventEmitter: EventEmitter2,
+    private readonly plugsService: PlugsService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private ownsReservationGuard(user: User | null, reservation: Reservation, passAdmin = false) {
@@ -233,8 +235,7 @@ export class ReservationsService {
     }
     reservation.status = ReservationStatus.CHECKED_IN;
     reservation.meta.checkedInAt = new Date();
-    // TODO: turn on machine
-    // TODO: set timer to turn off machine
+    await this.plugsService.turnOn(reservation.machineInstance.plugId);
     const result = this.reservationRepository.save(reservation);
     this.eventEmitter.emit('reservation.checkedIn', result);
     return result;
@@ -248,7 +249,7 @@ export class ReservationsService {
     }
     reservation.status = ReservationStatus.FINISHED;
     reservation.meta.checkedOutAt = new Date();
-    // TODO: turn off machine
+    await this.plugsService.turnOff(reservation.machineInstance.plugId);
     return this.reservationRepository.save(reservation);
   }
 

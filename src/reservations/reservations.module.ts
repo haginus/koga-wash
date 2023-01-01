@@ -1,7 +1,8 @@
-import { Logger, Module, OnModuleInit } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MachinesModule } from 'src/machines/machines.module';
 import { MailModule } from 'src/mail/mail.module';
+import { PlugsModule } from 'src/plugs/plugs.module';
 import { UsersModule } from 'src/users/users.module';
 import { Reservation } from './entities/reservation.entity';
 import { ReservationsController } from './reservations.controller';
@@ -14,6 +15,7 @@ import { TasksService } from './tasks.service';
     MachinesModule,
     UsersModule,
     MailModule,
+    PlugsModule,
   ],
   controllers: [ReservationsController],
   providers: [ReservationsService, TasksService, Logger],

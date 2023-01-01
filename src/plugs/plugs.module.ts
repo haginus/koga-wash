@@ -7,5 +7,6 @@ import { PlugsController } from './plugs.controller';
   imports: [HttpModule],
   providers: [PlugsService],
   controllers: [PlugsController],
+  exports: [PlugsService],
 })
 export class PlugsModule {}
