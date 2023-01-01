@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { Roles } from "src/auth/decorators/roles.decorator";
 import { Role } from "src/auth/role.enum";
 import { ProgrammeRequestDto } from "./dto/programme-request.dto";
@@ -28,6 +28,12 @@ export class ProgrammesController {
   @Roles(Role.Admin)
   async update(@Param("id") id: string, @Body() programmeDto: ProgrammeRequestDto) {
     return this.programmesService.update(id, programmeDto);
+  }
+
+  @Delete(":id")
+  @Roles(Role.Admin)
+  async delete(@Param("id") id: string) {
+    return this.programmesService.delete(id);
   }
 
   

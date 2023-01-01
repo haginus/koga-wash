@@ -42,4 +42,9 @@ export class ProgrammesService {
     }
     return this.programmeRepository.save({ id, ...programmeDto, machine });
   }
+
+  async delete(id: string) {
+    await this.findOne(id);
+    return this.programmeRepository.delete(id);
+  }
 }

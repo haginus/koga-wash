@@ -25,4 +25,11 @@ export class MachinesService {
       plainToInstance(DryerMachine, machineDto);
     return this.machineRepository.save(machine);
   }
+
+  async update(machineDto: MachineRequestDto) {
+    const machine = machineDto.kind == "WashingMachine" ? 
+      plainToInstance(WashingMachine, machineDto) : 
+      plainToInstance(DryerMachine, machineDto);
+    return this.machineRepository.save(machine);
+  }
 }
