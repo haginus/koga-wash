@@ -14,6 +14,9 @@ export class MachineInstance {
   @Column({ default: false })
   isFaulty: boolean;
 
+  @Column()
+  plugId: string;
+
   @ManyToOne(() => Machine, (machine) => machine.instances, { eager: true })
   machine: Machine;
 

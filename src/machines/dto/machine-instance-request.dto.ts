@@ -12,5 +12,9 @@ export class MachineInstanceRequestDto {
   
   @IsBoolean()
   isFaulty: boolean;
+
+  @IsNotEmpty()
+  @IsString()
+  plugId: string;
   
 }

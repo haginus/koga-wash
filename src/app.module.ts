@@ -9,6 +9,7 @@ import { MailModule } from './mail/mail.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { PlugsModule } from './plugs/plugs.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ReservationsModule,
     AuthModule,
     MailModule,
+    PlugsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

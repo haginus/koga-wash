@@ -23,6 +23,26 @@ export class MachineInstancesService {
     if(!machine) {
       throw new NotFoundException(`Machine with id ${machineInstanceDto.machineId} not found`);
     }
-    return this.machineRepository.save({ machine });
+    return this.machineRepository.save({ ...machineInstanceDto, machine });
+  }
+
+  async update(id: string, machineInstanceDto: MachineInstanceRequestDto) {
+    const machine = await this.machinesService.findOne(machineInstanceDto.machineId);
+    if(!machine) {
+      throw new NotFoundException(`Machine with id ${machineInstanceDto.machineId} not found`);
+    }
+    const machineInstance = await this.findOne(id);
+    if(!machineInstance) {
+      throw new NotFoundException(`Machine instance with id ${id} not found`);
+    }
+    return this.machineRepository.save({ ...machineInstance, ...machineInstanceDto, machine });
+  }
+
+  async delete(id: string) {
+    const machineInstance = await this.findOne(id);
+    if(!machineInstance) {
+      throw new NotFoundException(`Machine instance with id ${id} not found`);
+    }
+    return this.machineRepository.delete(id);
   }
 }

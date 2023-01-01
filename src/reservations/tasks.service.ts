@@ -14,8 +14,8 @@ import { ReservationsService } from "./reservations.service";
  */
 @Injectable()
 export class TasksService {
+  private readonly logger = new Logger(TasksService.name);
   constructor(
-    private readonly logger: Logger,
     private schedulerRegistry: SchedulerRegistry,
     private readonly reservationsService: ReservationsService,
     private readonly mailService: MailService,
@@ -36,10 +36,7 @@ export class TasksService {
       this.mailService.sendReservationStartReminder(reservation);
     }, notificationTime - Date.now());
     this.schedulerRegistry.addTimeout(`reservation/${notificationTime}/startNotif`, timeout);
-    this.logger.log(
-      `Registered start notification send for reservation {${reservation.id}} at ${new Date(notificationTime).toISOString()}`,
-      TasksService.name
-    );
+    this.logger.log(`Registered start notification send for reservation {${reservation.id}} at ${new Date(notificationTime).toISOString()}`);
 
     // Register a timeout for reservation cancel time.
     const cancelTime = reservation.startTime.getTime() + 5 * 60 * 1000;
@@ -50,10 +47,7 @@ export class TasksService {
       }
     }, cancelTime - Date.now());
     this.schedulerRegistry.addTimeout(`reservation/${reservation.id}/cancel`, cancelTimeout);
-    this.logger.log(
-      `Registered auto cancel for reservation {${reservation.id}} at ${new Date(cancelTime).toISOString()}`,
-      TasksService.name
-    );
+    this.logger.log(`Registered auto cancel for reservation {${reservation.id}} at ${new Date(cancelTime).toISOString()}`);
 
   }
 
@@ -66,10 +60,7 @@ export class TasksService {
       this.mailService.sendReservationStartReminder(reservation);
     }, timeoutTime);
     this.schedulerRegistry.addTimeout(`reservation/${notificationTime}/endNotif`, timeout);
-    this.logger.log(
-      `Registered end notification send for reservation {${reservation.id}} at ${new Date(notificationTime).toISOString()}`,
-      TasksService.name
-    );
+    this.logger.log(`Registered end notification send for reservation {${reservation.id}} at ${new Date(notificationTime).toISOString()}`);
 
     // Register a timeout for reservation end time.
     const endTime = reservation.endTime.getTime();
@@ -80,10 +71,7 @@ export class TasksService {
       }
     }, endTime - Date.now());
     this.schedulerRegistry.addTimeout(`reservation/${reservation.id}/end`, endTimeout);
-    this.logger.log(
-      `Registered auto check out for reservation {${reservation.id}} at ${new Date(endTime).toISOString()}`,
-      TasksService.name
-    );
+    this.logger.log(`Registered auto check out for reservation {${reservation.id}} at ${new Date(endTime).toISOString()}`);
   }
 
 }
