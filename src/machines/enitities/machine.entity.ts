@@ -3,7 +3,7 @@ import { MachineInstance } from "./machine-instance.entity";
 import { Programme } from "./programme.entity";
 
 @Entity()
-@TableInheritance({ column: { type: "varchar", name: "type" } })
+@TableInheritance({ column: { type: "varchar", name: "kind" } })
 export abstract class Machine {
 
   @PrimaryGeneratedColumn('uuid')
@@ -14,6 +14,9 @@ export abstract class Machine {
 
   @Column()
   model: string;
+
+  @Column()
+  kind: string;
 
   @OneToMany(type => MachineInstance, instance => instance.machine)
   instances: MachineInstance[];

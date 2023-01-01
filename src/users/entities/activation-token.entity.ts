@@ -10,7 +10,7 @@ export class ActivationToken {
   @Column()
   token: string;
 
-  @ManyToOne(() => User, (user) => user.tokens, { eager: true })
+  @ManyToOne(() => User, (user) => user.tokens, { eager: true, onDelete: 'CASCADE' })
   user: User;
 
   @Column()

@@ -28,7 +28,7 @@ export class Reservation {
   @ManyToOne(() => MachineInstance, (machineInstance) => machineInstance.reservations, { eager: true })
   machineInstance: MachineInstance;
 
-  @ManyToOne(() => User, (user) => user.reservations, { eager: true })
+  @ManyToOne(() => User, (user) => user.reservations, { eager: true, onDelete: 'CASCADE' })
   user: User;
 
   @ManyToOne(() => Programme, (programme) => programme.reservations, { eager: true })

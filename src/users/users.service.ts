@@ -5,6 +5,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { ActivationToken } from './entities/activation-token.entity';
+import { PaginatedQuery } from 'src/lib/types/PaginatedQuery';
+import { Paginated } from 'src/lib/types/Paginated';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -34,18 +37,29 @@ export class UsersService {
     }
   }
 
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.findOne(id);
+    const updatedUser = await this.usersRepository.save({ ...user, ...updateUserDto });
+    return updatedUser;
+  }
+
   async updateUserPassword(id: string, password: string) {
     const user = await this.findOne(id);
     user.password = password;
     return this.usersRepository.save(user);
   }
 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+  async findAll(opts?: PaginatedQuery): Promise<Paginated<User>> {
+    const [data, count] = await this.usersRepository.findAndCount({ take: opts?.limit, skip: opts?.offset });
+    return { data, count };
   }
 
   async findOne(id: string) {
-    return this.usersRepository.findOneBy({ id });
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new BadRequestException('Utilizatorul nu există.');
+    }
+    return user;
   }
 
   async findOneByEmail(email: string) {

@@ -3,6 +3,9 @@ import { MachineRequestDto } from "./dto/machine-request.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Machine } from "./enitities/machine.entity";
+import { plainToInstance } from "class-transformer";
+import { WashingMachine } from "./enitities/washing-machine.entity";
+import { DryerMachine } from "./enitities/dryer-machine.entity";
 
 @Injectable()
 export class MachinesService {
@@ -17,6 +20,9 @@ export class MachinesService {
   }
 
   async create(machineDto: MachineRequestDto) {
-    return this.machineRepository.save(machineDto);
+    const machine = machineDto.kind == "WashingMachine" ? 
+      plainToInstance(WashingMachine, machineDto) : 
+      plainToInstance(DryerMachine, machineDto);
+    return this.machineRepository.save(machine);
   }
 }

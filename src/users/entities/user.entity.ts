@@ -16,12 +16,15 @@ export class User {
   lastName: string;
 
   @Column()
+  room: string;
+
+  @Column()
   phone: string;
 
   @Column()
   email: string;
 
-  @Column({ select: false })
+  @Column({ select: false, default: "" })
   password: string;
 
   @Column()
