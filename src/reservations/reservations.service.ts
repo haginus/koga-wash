@@ -236,7 +236,7 @@ export class ReservationsService {
     reservation.status = ReservationStatus.CHECKED_IN;
     reservation.meta.checkedInAt = new Date();
     await this.plugsService.turnOn(reservation.machineInstance.plugId);
-    const result = this.reservationRepository.save(reservation);
+    const result = await this.reservationRepository.save(reservation);
     this.eventEmitter.emit('reservation.checkedIn', result);
     return result;
   }
