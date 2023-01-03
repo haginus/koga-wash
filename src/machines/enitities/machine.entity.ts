@@ -21,7 +21,7 @@ export abstract class Machine {
   @OneToMany(type => MachineInstance, instance => instance.machine)
   instances: MachineInstance[];
 
-  @OneToMany(type => Programme, instance => instance.machine, { eager: true })
+  @OneToMany(type => Programme, instance => instance.machine)
   programmes: Programme[];
 
 }
