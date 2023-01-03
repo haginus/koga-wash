@@ -35,7 +35,7 @@ export class TasksService {
     const timeout = setTimeout(() => {
       this.mailService.sendReservationStartReminder(reservation);
     }, notificationTime - Date.now());
-    this.schedulerRegistry.addTimeout(`reservation/${notificationTime}/startNotif`, timeout);
+    this.schedulerRegistry.addTimeout(`reservation/${reservation.id}/startNotif`, timeout);
     this.logger.log(`Registered start notification send for reservation {${reservation.id}} at ${new Date(notificationTime).toISOString()}`);
 
     // Register a timeout for reservation cancel time.
@@ -59,7 +59,7 @@ export class TasksService {
     const timeout = setTimeout(() => {
       this.mailService.sendReservationStartReminder(reservation);
     }, timeoutTime);
-    this.schedulerRegistry.addTimeout(`reservation/${notificationTime}/endNotif`, timeout);
+    this.schedulerRegistry.addTimeout(`reservation/${reservation.id}/endNotif`, timeout);
     this.logger.log(`Registered end notification send for reservation {${reservation.id}} at ${new Date(notificationTime).toISOString()}`);
 
     // Register a timeout for reservation end time.

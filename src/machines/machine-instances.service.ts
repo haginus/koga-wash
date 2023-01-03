@@ -18,6 +18,10 @@ export class MachineInstancesService {
     return this.machineRepository.find();
   }
 
+  async findAllByMachineId(machineId: string): Promise<MachineInstance[]> {
+    return this.machineRepository.find({ where: { machine: { id: machineId } } });
+  }
+
   async create(machineInstanceDto: MachineInstanceRequestDto) {
     const machine = await this.machinesService.findOne(machineInstanceDto.machineId);
     if(!machine) {

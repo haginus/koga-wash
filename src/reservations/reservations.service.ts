@@ -138,7 +138,7 @@ export class ReservationsService {
     
     const instances = instanceId ? 
       [await this.machineInstancesService.findOne(instanceId)] : 
-      await this.machineInstancesService.findAll();
+      await this.machineInstancesService.findAllByMachineId(programme.machine.id);
     
     return instances.map(instance => {
       const instanceReservations = groupedReservations[instance.id] || [];
@@ -194,6 +194,9 @@ export class ReservationsService {
     const programme = await this.programmesService.findOne(createReservationDto.programmeId);
     if(!programme) {
       throw new NotFoundException(`Programme with id ${createReservationDto.programmeId} not found`);
+    }
+    if(programme.machine.id != machineInstance.machine.id) {
+      throw new BadRequestException(`Programme ${programme.id} is not compatible with machine instance ${machineInstance.id}`);
     }
     if(createReservationDto.startTime.getTime() < Date.now()) {
       throw new BadRequestException(`Start time must be in the future`);
