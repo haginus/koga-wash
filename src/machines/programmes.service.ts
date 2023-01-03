@@ -11,7 +11,7 @@ export class ProgrammesService {
     private readonly machinesService: MachinesService) {}
 
   async findOne(id: string) {
-    const programme = await this.programmeRepository.findOneBy({ id });
+    const programme = await this.programmeRepository.findOne({ where: { id }, relations: ['machine'] });
     if(!programme) {
       throw new NotFoundException(`Programme with id ${id} not found`);
     }
@@ -19,7 +19,7 @@ export class ProgrammesService {
   }
 
   async findAll() {
-    return this.programmeRepository.find();
+    return this.programmeRepository.find({ relations: ['machine'] });
   }
 
   async findAllByMachineId(machineId: string) {
