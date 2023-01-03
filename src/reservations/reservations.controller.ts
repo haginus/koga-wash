@@ -52,5 +52,11 @@ export class ReservationsController {
   async checkOut(@Param("id") id: string, @CurrentUser() user: User) {
     return this.reservationsService.checkOut(user, id);
   }
+
+  @Get(":id/previous")
+  async findPrevious(@Param("id") id: string, @Query("flag") flag: string) {
+    const reservation = await this.reservationsService.findOne(id);
+    return this.reservationsService.findPreviousReservation(reservation, flag == "true");
+  }
   
 }

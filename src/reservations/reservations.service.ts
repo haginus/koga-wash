@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { InjectRepository } from "@nestjs/typeorm";
 import { roundToNearest10, entityOrFail, groupBy, indexArray } from "src/lib/util";
 import { MachineInstancesService } from "src/machines/machine-instances.service";
-import { FindOptionsWhere, LessThanOrEqual, Repository } from "typeorm";
+import { FindOptionsWhere, LessThanOrEqual, Not, Repository } from "typeorm";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { Reservation, ReservationStatus } from "./entities/reservation.entity";
 import { MoreThanOrEqual } from "typeorm";
@@ -77,16 +77,32 @@ export class ReservationsService {
     return result.data[0];
   }
 
-  async findPreviousReservation(reservation: Reservation): Promise<Reservation | undefined> {
-    const list = this.reservationRepository.find({ 
+  async findPreviousReservation(reservation: Reservation, flag?: boolean): Promise<Reservation | undefined> {
+    if(!reservation.canCheckIn) {
+      throw new BadRequestException(`Nu puteți cere rezervarea anterioară pentru această rezervare.`);
+    }
+    const list = await this.reservationRepository.find({ 
       where: { 
         machineInstance: { id: reservation.machineInstance.id },
-        endTime: LessThanOrEqual(reservation.startTime)
+        endTime: LessThanOrEqual(reservation.startTime),
+        status: Not(ReservationStatus.CANCELLED),
       },
       order: { endTime: 'DESC' }, 
       take: 1
     });
-    return list[0];
+    const previous = list[0];
+    if(!previous) return;
+    if(flag && !previous.meta.hasFlag('clothes_left_behind')) {
+      previous.flagged = true;
+      previous.meta.flags = previous.meta.flags || [];
+      previous.meta.flags.push({ 
+        flaggedAt: new Date(), 
+        flaggedByUserId: reservation.user.id, 
+        flagReason: 'clothes_left_behind' 
+      });
+      await this.reservationRepository.save(previous);
+    }
+    return previous;
   }
 
   getAvailableSlots(startTime: Date, _endTime: Date | undefined, reservations: Reservation[], programme: Programme) {
@@ -229,8 +245,7 @@ export class ReservationsService {
   async checkIn(user: User, id: string) {
     const reservation = await this.findOne(id);
     this.ownsReservationGuard(user, reservation);
-    const timeCheck = Math.abs(reservation.startTime.getTime() - Date.now()) <= 5 * 60 * 1000;
-    if(reservation.status != ReservationStatus.PENDING || !timeCheck) {
+    if(!reservation.canCheckIn) {
       throw new BadRequestException(`Nu se poate face check-in la această rezervare.`);
     }
     reservation.status = ReservationStatus.CHECKED_IN;

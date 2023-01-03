@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { plainToInstance, Type } from 'class-transformer';
 import { Role } from 'src/auth/role.enum';
 import { MachineInstance } from 'src/machines/enitities/machine-instance.entity';
 import { Programme } from 'src/machines/enitities/programme.entity';
@@ -17,7 +17,25 @@ class ReservationMeta {
 
   cancelledBy?: Role;
 
+  @Type(() => ReservationMetaFlag)
+  flags?: ReservationMetaFlag[] = [];
+
+  hasFlag(flagReason: FlagReason) {
+    return !!this.flags?.find((flag) => flag.flagReason === flagReason);
+  }
+
 }
+
+class ReservationMetaFlag {
+  @Type(() => Date)
+  flaggedAt: Date;
+
+  flaggedByUserId: string;
+
+  flagReason: FlagReason;
+}
+
+type FlagReason = 'clothes_left_behind';
 
 @Entity()
 export class Reservation {
@@ -43,8 +61,16 @@ export class Reservation {
   @Column()
   status: ReservationStatus;
 
-  @Column("simple-json")
-  @Type(() => ReservationMeta)
+  @Column({ default: false })
+  flagged: boolean;
+
+  @Column({
+    type: 'simple-json',
+    transformer: {
+      from: (value) => plainToInstance(ReservationMeta, value),
+      to: (value) => value,
+    }
+  })
   meta: ReservationMeta;
 
   get isPending(): boolean {
@@ -53,6 +79,10 @@ export class Reservation {
 
   get isPast(): boolean {
     return [ReservationStatus.FINISHED, ReservationStatus.CANCELLED, ReservationStatus.NOT_HONORED].includes(this.status);
+  }
+
+  get canCheckIn() {
+    return this.status == ReservationStatus.PENDING && Math.abs(this.startTime.getTime() - Date.now()) <= 5 * 60 * 1000;
   }
 
   containsTime(time: Date): boolean {
