@@ -5,10 +5,11 @@ import { ChangePasswordDto } from './dto/ChangePasswordDto';
 import { hashSync, compareSync } from "bcrypt";
 import { JwtPayloadDto } from './dto/JwtPayloadDto';
 import { User } from 'src/users/entities/user.entity';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService, private jwtService: JwtService) {}
+  constructor(private usersService: UsersService, private jwtService: JwtService, private dataSource: DataSource) {}
 
   public async changePassword({ token, password }: ChangePasswordDto) {
     if(password.length < 8) {
@@ -18,7 +19,30 @@ export class AuthService {
     if(!tokenResult || tokenResult.used) {
       throw new BadRequestException('Token invalid.');
     }
-    await this.usersService.updateUserPassword(tokenResult.user.id, hashSync(password, 10));
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    tokenResult.user.password = hashSync(password, 10);
+    tokenResult.used = true;
+    try {
+      await queryRunner.manager.save(tokenResult.user);
+      await queryRunner.manager.save(tokenResult);
+      await queryRunner.commitTransaction();
+      return this.login(tokenResult.user);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException('A apărut o eroare.');
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async checkToken(token: string) {
+    const tokenResult = await this.usersService.findToken(token);
+    if(!tokenResult || tokenResult.used) {
+      throw new BadRequestException('Token invalid.');
+    }
+    return { email: tokenResult.user.email };
   }
 
   async validateUser(email: string, pass: string): Promise<any> {
