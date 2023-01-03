@@ -43,6 +43,9 @@ export class ReservationsService {
 
   async findAll(opts?: ReservationQueryDto): Promise<Paginated<Reservation>> {
     const where: FindOptionsWhere<Reservation> = {};
+    if(opts?.userId) {
+      where.user = { id: opts.userId };
+    }
     if(opts?.instanceId) {
       where.machineInstance = { id: opts.instanceId };
     }
@@ -141,12 +144,12 @@ export class ReservationsService {
       await this.machineInstancesService.findAllByMachineId(programme.machine.id);
     
     return instances.map(instance => {
+      if(instance.isFaulty) return { instance, slots: [] };
       const instanceReservations = groupedReservations[instance.id] || [];
       const instanceSlots = this.getAvailableSlots(startTime, endTime, instanceReservations, programme);
       delete instance.machine.programmes;
       return { instance, slots: instanceSlots };
-    });
-
+    }).filter(({ slots }) => slots.length > 0);
   }
 
   async findAvailableInstances(): Promise<AvailableInstancesDto[]> {
