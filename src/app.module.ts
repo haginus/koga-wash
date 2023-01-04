@@ -12,6 +12,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PlugsModule } from './plugs/plugs.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration';
+import { GoogleRecaptchaModule, GoogleRecaptchaNetwork } from '@nestlab/google-recaptcha';
 
 @Module({
   imports: [
@@ -30,6 +31,15 @@ import configuration from './config/configuration';
         password: configService.get('database.password'),
         autoLoadEntities: true,
         synchronize: true,
+      }),
+      inject: [ConfigService],
+    }),
+    GoogleRecaptchaModule.forRootAsync({
+      imports: [ConfigModule.forRoot({ load: [configuration] })],
+      useFactory: async (configService: ConfigService) => ({
+        secretKey: configService.get('captcha.secret'),
+        response: req => req.headers.recaptcha,
+        network: GoogleRecaptchaNetwork.Recaptcha,
       }),
       inject: [ConfigService],
     }),

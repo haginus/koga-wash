@@ -6,12 +6,14 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { Request } from 'express';
 import { ChangePasswordDto } from './dto/ChangePasswordDto';
+import { Recaptcha } from '@nestlab/google-recaptcha';
 
 @Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
+  @Recaptcha()
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Req() req: Request) {
