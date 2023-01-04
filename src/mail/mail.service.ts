@@ -1,14 +1,15 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Reservation } from 'src/reservations/entities/reservation.entity';
 import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class MailService {
-  constructor(private mailerService: MailerService) {}
+  constructor(private mailerService: MailerService, private configService: ConfigService) {}
 
   async sendUserConfirmation(user: User, token: string) {
-    const url = `example.com/auth/confirm?token=${token}`;
+    const url = `${this.configService.get('frontend.url')}/login/token/${token}`;
 
     await this.mailerService.sendMail({
       to: user.email,

@@ -22,5 +22,8 @@ export default () => ({
   },
   captcha: {
     secret: process.env.CAPTCHA_SECRET,
+  },
+  frontend: {
+    url: process.env.FRONTEND_URL,
   }
 });
