@@ -8,7 +8,10 @@ export default function Footer() {
   return (
     <>
       <Hr style={styles.hr} />
-      <Text style={styles.muted}>Căminul Mihail Kogălniceanu</Text>
+      <Text style={styles.muted}>
+        Căminul Mihail Kogălniceanu <br/>
+        Bd. Mihail Kogălniceanu nr. 36-46, Sector 5, București, 050107
+      </Text>
     </>
   );
 }
