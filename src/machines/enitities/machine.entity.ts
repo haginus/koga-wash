@@ -16,7 +16,7 @@ export abstract class Machine {
   model: string;
 
   @Column()
-  kind: string;
+  kind: 'WashingMachine' | 'DryerMachine';
 
   @OneToMany(type => MachineInstance, instance => instance.machine)
   instances: MachineInstance[];

@@ -1,0 +1,1 @@
+export const baseUrl = process.env.FRONTEND_URL;

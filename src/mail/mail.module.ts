@@ -5,6 +5,7 @@ import { MailService } from './mail.service';
 import { join } from 'path';
 import configuration from 'src/config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ReactEmailAdapter } from './adapters/react-email.adapter';
 
 @Module({
   imports: [
@@ -25,10 +26,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         },
         template: {
           dir: join(__dirname, 'templates'),
-          adapter: new HandlebarsAdapter({
-            dateFormat: (date: Date) => date.toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' }),
-            timeFormat: (date: Date) => date.toLocaleTimeString('ro-RO', { hour: 'numeric', minute: 'numeric' }),
-          }),
+          adapter: new ReactEmailAdapter(),
           options: {
             strict: true,
           },

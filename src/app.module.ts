@@ -13,6 +13,7 @@ import { PlugsModule } from './plugs/plugs.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration';
 import { GoogleRecaptchaModule, GoogleRecaptchaNetwork } from '@nestlab/google-recaptcha';
+import { DevModule } from './dev/dev.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { GoogleRecaptchaModule, GoogleRecaptchaNetwork } from '@nestlab/google-r
     AuthModule,
     MailModule,
     PlugsModule,
+    DevModule,
   ],
   controllers: [AppController],
   providers: [AppService],
