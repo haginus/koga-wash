@@ -1,6 +1,6 @@
 export const logo = {
-  width: 160,
-  height: 60,
+  width: 205,
+  height: 64,
 };
 
 export const fontFamily =
@@ -40,7 +40,7 @@ export const buttonContainer = {
 
 export const button = {
   fontFamily,
-  backgroundColor: '#5e6ad2',
+  backgroundColor: '#314656',
   borderRadius: '3px',
   fontWeight: '600',
   color: '#fff',

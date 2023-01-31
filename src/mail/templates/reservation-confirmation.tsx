@@ -7,6 +7,7 @@ import * as styles from "../mail.styles";
 import { baseUrl } from '../constants';
 import { Reservation } from 'src/reservations/entities/reservation.entity';
 import ReservationDisclaimer from '../partials/reservation-disclaimer';
+import { stringifyDate, stringifyTime } from '../util';
 
 interface EmailProps {
   reservation: Reservation;
@@ -19,8 +20,8 @@ export default function ReservationConfirmation({ reservation }: EmailProps) {
         Salutare, {reservation.user.firstName} {reservation.user.lastName}! <br/>
         Rezervarea la <strong>{ reservation.machineInstance.name }</strong>{' '}
         pentru programul <strong>{ reservation.programme.name }</strong>{' '}
-        este confimată pe data de <strong>{reservation.startTime.toLocaleDateString('ro-Ro')}</strong>{' '}
-        de la ora <b>{reservation.startTime.toLocaleTimeString('ro-Ro')}</b>.
+        este confimată pe data de <strong>{stringifyDate(reservation.startTime)}</strong>{' '}
+        de la ora <b>{stringifyTime(reservation.startTime)}</b>.
       </Text>
       <Section style={styles.buttonContainer}>
         <Button pY={12} pX={24} style={styles.button} href={`${baseUrl}/${reservation.user.role}/reservations/${reservation.id}`}>
