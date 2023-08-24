@@ -6,12 +6,11 @@ import { EnergyUsageDto } from './dto/energy-usage.dto';
 
 @Injectable()
 export class PlugsService {
-  private readonly gatewayUrl = "http://127.0.0.1:5000";
   constructor(private readonly httpService: HttpService) {}
 
   async findAll() {
     const { data } = await firstValueFrom(
-      this.httpService.get<DeviceDto[]>(this.gatewayUrl).pipe(
+      this.httpService.get<DeviceDto[]>("/").pipe(
         catchError(() => {
           throw new BadGatewayException("Nu s-a putut comunica cu gateway-ul.");
         }),
@@ -22,7 +21,7 @@ export class PlugsService {
 
   async findOne(id: string) {
     const { data } = await firstValueFrom(
-      this.httpService.get<DeviceDto>(`${this.gatewayUrl}/${id}`).pipe(
+      this.httpService.get<DeviceDto>(`/${id}`).pipe(
         catchError(() => {
           throw new BadGatewayException("Nu s-a putut comunica cu gateway-ul.");
         }),
@@ -33,7 +32,7 @@ export class PlugsService {
 
   async turnOn(id: string) {
     const { data } = await firstValueFrom(
-      this.httpService.get<DeviceDto>(`${this.gatewayUrl}/${id}/on`).pipe(
+      this.httpService.get<DeviceDto>(`/${id}/on`).pipe(
         catchError(() => {
           throw new BadGatewayException("Priza nu a putut fi pornită.");
         }),
@@ -44,7 +43,7 @@ export class PlugsService {
 
   async turnOff(id: string) {
     const { data } = await firstValueFrom(
-      this.httpService.get<DeviceDto>(`${this.gatewayUrl}/${id}/off`).pipe(
+      this.httpService.get<DeviceDto>(`/${id}/off`).pipe(
         catchError(() => {
           throw new BadGatewayException("Priza nu a putut fi oprită.");
         }),
@@ -55,7 +54,7 @@ export class PlugsService {
 
   async getEnergyUsage(id: string) {
     const { data } = await firstValueFrom(
-      this.httpService.get<EnergyUsageDto>(`${this.gatewayUrl}/${id}/energy-usage`).pipe(
+      this.httpService.get<EnergyUsageDto>(`/${id}/energy-usage`).pipe(
         catchError(() => {
           throw new BadGatewayException("Nu s-a putut comunica cu gateway-ul.");
         }),

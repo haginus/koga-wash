@@ -23,6 +23,10 @@ export default () => ({
   captcha: {
     secret: process.env.CAPTCHA_SECRET,
   },
+  gateway: {
+    url: process.env.GATEWAY_URL,
+    secret: process.env.GATEWAY_SECRET,
+  },
   frontend: {
     url: process.env.FRONTEND_URL,
   }
