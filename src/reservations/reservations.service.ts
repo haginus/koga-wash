@@ -256,6 +256,7 @@ export class ReservationsService {
     }
     reservation.status = ReservationStatus.CHECKED_IN;
     reservation.meta.checkedInAt = new Date();
+    reservation.meta.initialEnergyUsage = (await this.plugsService.getEnergyUsage(reservation.machineInstance.plugId)).today_energy;
     await this.plugsService.turnOn(reservation.machineInstance.plugId);
     const result = await this.reservationRepository.save(reservation);
     this.eventEmitter.emit('reservation.checkedIn', result);
@@ -270,8 +271,29 @@ export class ReservationsService {
     }
     reservation.status = ReservationStatus.FINISHED;
     reservation.meta.checkedOutAt = new Date();
+    const currentEnergyUsage = (await this.plugsService.getEnergyUsage(reservation.machineInstance.plugId)).today_energy;
+    reservation.energyUsage = currentEnergyUsage - reservation.meta.initialEnergyUsage;
+    delete reservation.meta.initialEnergyUsage;
     await this.plugsService.turnOff(reservation.machineInstance.plugId);
     return this.reservationRepository.save(reservation);
+  }
+
+  /**
+   * Resets the initial energy usage for all reservations that are currently checked in.
+   * This is called before the start of each day.
+   */
+  async savePendingEnergyUsage() {
+    const reservations = await this.reservationRepository.find({
+      where: {
+        status: ReservationStatus.CHECKED_IN,
+      },
+      relations: ['machineInstance'],
+    });
+    for(const reservation of reservations) {
+      const currentEnergyUsage = (await this.plugsService.getEnergyUsage(reservation.machineInstance.plugId)).today_energy;
+      reservation.meta.initialEnergyUsage = -(currentEnergyUsage - reservation.meta.initialEnergyUsage);
+      await this.reservationRepository.save(reservation);
+    }
   }
 
 }

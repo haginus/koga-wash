@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { BadGatewayException, Injectable } from '@nestjs/common';
 import { catchError, firstValueFrom } from 'rxjs';
 import { DeviceDto } from './dto/device.dto';
+import { EnergyUsageDto } from './dto/energy-usage.dto';
 
 @Injectable()
 export class PlugsService {
@@ -46,6 +47,17 @@ export class PlugsService {
       this.httpService.get<DeviceDto>(`${this.gatewayUrl}/${id}/off`).pipe(
         catchError(() => {
           throw new BadGatewayException("Priza nu a putut fi oprită.");
+        }),
+      ),
+    );
+    return data;
+  }
+
+  async getEnergyUsage(id: string) {
+    const { data } = await firstValueFrom(
+      this.httpService.get<EnergyUsageDto>(`${this.gatewayUrl}/${id}/energy-usage`).pipe(
+        catchError(() => {
+          throw new BadGatewayException("Nu s-a putut comunica cu gateway-ul.");
         }),
       ),
     );

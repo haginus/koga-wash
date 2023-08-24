@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
-import { SchedulerRegistry } from "@nestjs/schedule";
+import { Cron, SchedulerRegistry } from "@nestjs/schedule";
 import { MailService } from "src/mail/mail.service";
 import { Reservation, ReservationStatus } from "./entities/reservation.entity";
 import { ReservationsService } from "./reservations.service";
@@ -72,6 +72,11 @@ export class TasksService {
     }, endTime - Date.now());
     this.schedulerRegistry.addTimeout(`reservation/${reservation.id}/end`, endTimeout);
     this.logger.log(`Registered auto check out for reservation {${reservation.id}} at ${new Date(endTime).toISOString()}`);
+  }
+
+  @Cron("0 59 23 * * *")
+  public async saveEnergyUsage() {
+    this.reservationsService.savePendingEnergyUsage();
   }
 
 }

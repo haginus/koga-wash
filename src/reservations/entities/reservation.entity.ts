@@ -17,6 +17,8 @@ class ReservationMeta {
 
   cancelledBy?: Role;
 
+  initialEnergyUsage?: number;
+
   @Type(() => ReservationMetaFlag)
   flags?: ReservationMetaFlag[] = [];
 
@@ -60,6 +62,10 @@ export class Reservation {
 
   @Column()
   status: ReservationStatus;
+
+  /** Energy usage in watts */
+  @Column()
+  energyUsage: number;
 
   @Column({ default: false })
   flagged: boolean;
