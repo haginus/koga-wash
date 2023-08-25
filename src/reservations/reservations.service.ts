@@ -190,27 +190,33 @@ export class ReservationsService {
 
   async create(createReservationDto: CreateReservationDto) {
     const user = await this.usersService.findOne(createReservationDto.userId);
+    if(!user) {
+      throw new NotFoundException(`User with id ${createReservationDto.userId} not found`);
+    }
+    if(user.suspendedUntil && user.suspendedUntil.getTime() > Date.now()) {
+      throw new BadRequestException(`Utilizatorul este suspendat până la ${user.suspendedUntil}.`);
+    }
     const machineInstance = await this.machineInstancesService.findOne(createReservationDto.machineInstanceId);
     if(!machineInstance) {
-      throw new NotFoundException(`Machine instance with id ${createReservationDto.machineInstanceId} not found`);
+      throw new NotFoundException(`Instanța cu ID-ul ${createReservationDto.machineInstanceId} nu a fost găsită.`);
     }
     const programme = await this.programmesService.findOne(createReservationDto.programmeId);
     if(!programme) {
-      throw new NotFoundException(`Programme with id ${createReservationDto.programmeId} not found`);
+      throw new NotFoundException(`Programul cu ID-ul ${createReservationDto.programmeId} nu a fost găsit.`);
     }
     if(programme.machine.id != machineInstance.machine.id) {
-      throw new BadRequestException(`Programme ${programme.id} is not compatible with machine instance ${machineInstance.id}`);
+      throw new BadRequestException(`Programul cu ID-ul ${programme.id} nu este compatibil cu instanța ${machineInstance.id}.`);
     }
     if(createReservationDto.startTime.getTime() < Date.now()) {
-      throw new BadRequestException(`Start time must be in the future`);
+      throw new BadRequestException(`Data de început trebuie să fie în viitor.`);
     }
     if(createReservationDto.startTime.getTime() != roundToNearest10(createReservationDto.startTime).getTime()) {
-      throw new BadRequestException(`Start time must be a multiple of 10 minutes`);
+      throw new BadRequestException(`Data de început trebuie să fie multiplu de 10 minute.`);
     }
     const endTime = new Date(createReservationDto.startTime.getTime() + programme.duration * 60 * 1000);
     const availableSlots = await this.findAvailableSlots(createReservationDto.startTime, endTime, createReservationDto.programmeId, createReservationDto.machineInstanceId);
     if(availableSlots.length == 0 || availableSlots[0].slots.length == 0) {
-      throw new BadRequestException(`No available slots for machine instance ${createReservationDto.machineInstanceId} at ${createReservationDto.startTime}`);
+      throw new BadRequestException(`Niciun slot disponibil pentru instanța ${createReservationDto.machineInstanceId} la ${createReservationDto.startTime}`);
     }
     let reservation = plainToInstance(Reservation, {
       startTime: createReservationDto.startTime,

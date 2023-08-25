@@ -30,6 +30,9 @@ export class User {
   @Column()
   role: Role;
 
+  @Column({ nullable: true })
+  suspendedUntil?: Date;
+
   @OneToMany(type => ActivationToken, token => token.user)
   tokens: ActivationToken[];
 

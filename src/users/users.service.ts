@@ -9,6 +9,7 @@ import { PaginatedQuery } from 'src/lib/types/PaginatedQuery';
 import { Paginated } from 'src/lib/types/Paginated';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { plainToInstance } from 'class-transformer';
+import { SuspendUserDto } from './dto/suspend-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -63,7 +64,7 @@ export class UsersService {
   async findOneByEmail(email: string) {
     return this.usersRepository.findOne({ 
       where: { email },
-      select: ['id', 'firstName', 'lastName', 'email', 'phone', 'password', 'role']
+      select: ['id', 'firstName', 'lastName', 'email', 'phone', 'password', 'role', 'suspendedUntil']
     });
 
   }
@@ -71,6 +72,21 @@ export class UsersService {
   async delete(id: string) {
     const deletedUser = await this.usersRepository.delete({ id });
     return deletedUser;
+  }
+
+  async suspend(id: string, suspendUserDto: SuspendUserDto) {
+    const user = await this.findOne(id);
+    if(suspendUserDto.until < new Date()) {
+      throw new BadRequestException('Data trebuie să fie în viitor.');
+    }
+    user.suspendedUntil = suspendUserDto.until;
+    return this.usersRepository.save(user);
+  }
+
+  async unsuspend(id: string) {
+    const user = await this.findOne(id);
+    user.suspendedUntil = null;
+    return this.usersRepository.save(user);
   }
 
   async findToken(token: string) {
