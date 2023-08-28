@@ -3,13 +3,13 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { MailService } from '../mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { ActivationToken } from './entities/activation-token.entity';
-import { PaginatedQuery } from 'src/lib/types/PaginatedQuery';
 import { Paginated } from 'src/lib/types/Paginated';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { SuspendUserDto } from './dto/suspend-user.dto';
+import { UserQueryDto } from './dto/user-query.dto';
 
 @Injectable()
 export class UsersService {
@@ -48,8 +48,22 @@ export class UsersService {
     return updatedUser;
   }
 
-  async findAll(opts?: PaginatedQuery): Promise<Paginated<User>> {
-    const [data, count] = await this.usersRepository.findAndCount({ take: opts?.limit, skip: opts?.offset });
+  async findAll(opts?: UserQueryDto): Promise<Paginated<User>> {
+    const where: FindOptionsWhere<User>[] = [];
+    if (opts?.firstName) {
+      where.push({ firstName: ILike(opts.firstName) });
+    }
+    if (opts?.lastName) {
+      where.push({ lastName: ILike(opts.lastName) });
+    }
+    if (opts?.email) {
+      where.push({ email: ILike(opts.email) });
+    }
+    const [data, count] = await this.usersRepository.findAndCount({ 
+      take: opts?.limit, 
+      skip: opts?.offset, 
+      where: where.length ? where : undefined,
+    });
     return { data, count };
   }
 

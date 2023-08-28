@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/role.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 import { SuspendUserDto } from './dto/suspend-user.dto';
+import { UserQueryDto } from './dto/user-query.dto';
 
 @Controller('users')
 @Roles(Role.Admin)
@@ -17,8 +18,8 @@ export class UsersController {
   }
 
   @Get()
-  async findAll() {
-    return this.usersService.findAll();
+  async findAll(@Query() query: UserQueryDto = {}) {
+    return this.usersService.findAll(query);
   }
 
   @Get(':id')
