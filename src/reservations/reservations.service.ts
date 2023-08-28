@@ -191,7 +191,7 @@ export class ReservationsService {
   async create(createReservationDto: CreateReservationDto) {
     const user = await this.usersService.findOne(createReservationDto.userId);
     if(!user) {
-      throw new NotFoundException(`User with id ${createReservationDto.userId} not found`);
+      throw new NotFoundException(`Usetilizatorul cu ID-ul ${createReservationDto.userId} nu a fost găsit.`);
     }
     if(user.suspendedUntil && user.suspendedUntil.getTime() > Date.now()) {
       throw new BadRequestException(`Utilizatorul este suspendat până la ${user.suspendedUntil}.`);
@@ -210,9 +210,6 @@ export class ReservationsService {
     if(createReservationDto.startTime.getTime() < Date.now()) {
       throw new BadRequestException(`Data de început trebuie să fie în viitor.`);
     }
-    if(createReservationDto.startTime.getTime() != roundToNearest10(createReservationDto.startTime).getTime()) {
-      throw new BadRequestException(`Data de început trebuie să fie multiplu de 10 minute.`);
-    }
     const endTime = new Date(createReservationDto.startTime.getTime() + programme.duration * 60 * 1000);
     const availableSlots = await this.findAvailableSlots(createReservationDto.startTime, endTime, createReservationDto.programmeId, createReservationDto.machineInstanceId);
     if(availableSlots.length == 0 || availableSlots[0].slots.length == 0) {
@@ -229,7 +226,11 @@ export class ReservationsService {
     });
 
     reservation = await this.reservationRepository.save(reservation);
-    this.mailService.sendReservationConfirmation(reservation);
+    try {
+      this.mailService.sendReservationConfirmation(reservation);
+    } catch(error) {
+      console.error(error);
+    }
     this.eventEmitter.emit('reservation.created', reservation);
     return reservation;
   }

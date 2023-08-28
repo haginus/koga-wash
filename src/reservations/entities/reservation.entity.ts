@@ -64,8 +64,8 @@ export class Reservation {
   status: ReservationStatus;
 
   /** Energy usage in watts */
-  @Column()
-  energyUsage: number;
+  @Column({ nullable: true })
+  energyUsage: number | null;
 
   @Column({ default: false })
   flagged: boolean;
