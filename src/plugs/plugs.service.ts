@@ -3,10 +3,15 @@ import { BadGatewayException, Injectable } from '@nestjs/common';
 import { catchError, firstValueFrom } from 'rxjs';
 import { DeviceDto } from './dto/device.dto';
 import { EnergyUsageDto } from './dto/energy-usage.dto';
+import { indexArray } from 'src/lib/util';
+import { MachineInstancesService } from 'src/machines/machine-instances.service';
 
 @Injectable()
 export class PlugsService {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService, 
+    private readonly instanceService: MachineInstancesService,
+  ) {}
 
   async findAll() {
     const { data } = await firstValueFrom(
@@ -16,7 +21,9 @@ export class PlugsService {
         }),
       ),
     );
-    return data;
+    const instances = await this.instanceService.findAll();
+    const instancesIndex = indexArray(instances, (instance) => instance.plugId);
+    return data.map(device => ({ ...device, instance: instancesIndex[device.deviceId] }));
   }
 
   async findOne(id: string) {

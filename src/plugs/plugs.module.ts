@@ -4,6 +4,7 @@ import { PlugsService } from './plugs.service';
 import { PlugsController } from './plugs.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from 'src/config/configuration';
+import { MachinesModule } from 'src/machines/machines.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import configuration from 'src/config/configuration';
         },
       }),
       inject: [ConfigService]
-    })
+    }),
+    MachinesModule,
   ],
   providers: [PlugsService],
   controllers: [PlugsController],
