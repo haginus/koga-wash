@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { roundToNearest10, entityOrFail, groupBy, indexArray } from "src/lib/util";
+import { roundToNearest10, entityOrFail, groupBy, getOrder } from "src/lib/util";
 import { MachineInstancesService } from "src/machines/machine-instances.service";
 import { FindOptionsWhere, LessThanOrEqual, Not, Repository } from "typeorm";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
@@ -31,7 +31,7 @@ export class ReservationsService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  private ownsReservationGuard(user: User | null, reservation: Reservation, passAdmin = false) {
+  private ownsReservationGuard(user: User | null, reservation: Reservation, passAdmin = true) {
     if(!user) return;
     if(user.id != reservation.user.id) {
       if(user.role == Role.Admin && passAdmin) {
@@ -60,7 +60,7 @@ export class ReservationsService {
     }
     const [data, count] = await this.reservationRepository.findAndCount({ 
       where,
-      order: { startTime: 'ASC' },
+      order: getOrder<Reservation>(opts?.sortBy || 'startTime', opts?.sortDirection || 'ASC'),
       take: opts?.limit,
       skip: opts?.offset
     });
@@ -108,7 +108,7 @@ export class ReservationsService {
     return previous;
   }
 
-  getAvailableSlots(startTime: Date, _endTime: Date | undefined, reservations: Reservation[], programme: Programme) {
+  private getAvailableSlots(startTime: Date, _endTime: Date | undefined, reservations: Reservation[], programme: Programme) {
     const duration = programme.duration * 60 * 1000;
     const buffer = 10 * 60 * 1000;
     const bufferedDuration = duration + buffer;
@@ -237,7 +237,7 @@ export class ReservationsService {
 
   async cancel(user: User, id: string) {
     const reservation = await this.findOne(id);
-    this.ownsReservationGuard(user, reservation, true);
+    this.ownsReservationGuard(user, reservation);
     if(!reservation.isPending) {
       throw new BadRequestException(`Rezervarea nu poate fi anulată.`);
     }

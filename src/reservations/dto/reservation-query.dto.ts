@@ -27,4 +27,11 @@ export class ReservationQueryDto extends PaginatedQuery {
   @IsEnum(ReservationStatus)
   status?: ReservationStatus;
 
+  @IsOptional()
+  @IsEnum(['id', 'startTime', 'machineInstance.name', 'user.lastName', 'programme.name', 'status'])
+  sortBy?: 'id' | 'startTime' | 'machineInstance.name' | 'user.lastName' | 'programme.name' | 'status' = 'startTime';
+
+  @IsOptional()
+  @IsEnum(['ASC', 'DESC', 'asc', 'desc'])
+  sortDirection?: 'ASC' | 'DESC' = 'ASC';
 }

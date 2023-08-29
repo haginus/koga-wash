@@ -1,4 +1,6 @@
 import { NotFoundException } from "@nestjs/common";
+import { Reservation } from "src/reservations/entities/reservation.entity";
+import { FindOptionsOrder } from "typeorm";
 
 export function roundToNearest10(date = new Date()) {
   const minutes = 10;
@@ -26,4 +28,20 @@ export function groupBy<T>(collection: T[], getKey: ((item: T) => string | numbe
 
 export function indexArray<T = any, U = T>(arr: T[], getKey: (item: T) => string | number, getValue: (item: T) => U = (item: T) => item as any): Record<string | number, U> {
   return arr.reduce((acc, item) => ({ ...acc, [getKey(item)]: getValue(item) }), {});
+}
+
+export function getOrder<T>(field: string, direction: 'ASC' | 'DESC'): FindOptionsOrder<T> {
+  const nests = field.split('.');
+  const result = {};
+  let current = result;
+
+  nests.forEach((nest, index) => {
+    if (index === nests.length - 1) {
+      current[nest] = direction;
+    } else {
+      current[nest] = {};
+      current = current[nest];
+    }
+  });
+  return result as FindOptionsOrder<T>;
 }
