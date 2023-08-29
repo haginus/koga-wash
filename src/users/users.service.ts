@@ -10,6 +10,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { SuspendUserDto } from './dto/suspend-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
+import { likeStr } from 'src/lib/util';
 
 @Injectable()
 export class UsersService {
@@ -51,13 +52,13 @@ export class UsersService {
   async findAll(opts?: UserQueryDto): Promise<Paginated<User>> {
     const where: FindOptionsWhere<User>[] = [];
     if (opts?.firstName) {
-      where.push({ firstName: ILike(opts.firstName) });
+      where.push({ firstName: ILike(likeStr(opts.firstName)) });
     }
     if (opts?.lastName) {
-      where.push({ lastName: ILike(opts.lastName) });
+      where.push({ lastName: ILike(likeStr(opts.lastName)) });
     }
     if (opts?.email) {
-      where.push({ email: ILike(opts.email) });
+      where.push({ email: ILike(likeStr(opts.email)) });
     }
     const [data, count] = await this.usersRepository.findAndCount({ 
       take: opts?.limit, 

@@ -45,3 +45,7 @@ export function getOrder<T>(field: string, direction: 'ASC' | 'DESC'): FindOptio
   });
   return result as FindOptionsOrder<T>;
 }
+
+export function likeStr(str: string, left = true, right = true) {
+  return `${left ? '%' : ''}${str}${right ? '%' : ''}`;
+}
