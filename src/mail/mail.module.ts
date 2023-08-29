@@ -1,5 +1,4 @@
 import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { Module } from '@nestjs/common';
 import { MailService } from './mail.service';
 import { join } from 'path';
@@ -22,7 +21,7 @@ import { ReactEmailAdapter } from './adapters/react-email.adapter';
           },
         },
         defaults: {
-          from: '"Kogă Wash" <noreply@spalatorie.caminkogalniceanu.ro>',
+          from: configService.get('mail.from'),
         },
         template: {
           dir: join(__dirname, 'templates'),

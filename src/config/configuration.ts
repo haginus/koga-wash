@@ -18,7 +18,7 @@ export default () => ({
       user: process.env.MAIL_AUTH_USER,
       pass: process.env.MAIL_AUTH_PASS,
     },
-    from: process.env.MAIL_FROM,
+    from: process.env.MAIL_FROM || '"Kogă Wash" <noreply@spalatorie.caminkogalniceanu.ro>',
   },
   captcha: {
     secret: process.env.CAPTCHA_SECRET,
