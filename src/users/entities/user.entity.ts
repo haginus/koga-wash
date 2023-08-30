@@ -15,10 +15,10 @@ export class User {
   @Column()
   lastName: string;
 
-  @Column()
+  @Column({ nullable: true })
   room: string;
 
-  @Column()
+  @Column({ nullable: true })
   phone: string;
 
   @Column()
