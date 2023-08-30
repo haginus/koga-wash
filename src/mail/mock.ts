@@ -1,5 +1,6 @@
 import { plainToInstance } from "class-transformer";
 import { Role } from "src/auth/role.enum";
+import { roundToNearest10 } from "src/lib/util";
 import { MachineInstance } from "src/machines/enitities/machine-instance.entity";
 import { Machine } from "src/machines/enitities/machine.entity";
 import { MaterialKind, Programme } from "src/machines/enitities/programme.entity";
@@ -48,25 +49,29 @@ export const mockUser: User = {
   role: Role.User,
 };
 
-export const mockReservation: Reservation = plainToInstance(Reservation, {
-  id: "f15d2348-e297-42a0-bf9e-566f6f5bb59f",
-  startTime: new Date("2023-01-02T13:00:00.000Z"),
-  endTime: new Date("2023-01-02T14:00:00.000Z"),
-  status: ReservationStatus.PENDING,
-  flagged: true,
-  meta: {
-    flags: [
-      {
-        flaggedAt: new Date("2023-01-02T23:37:15.867Z"),
-        flaggedByUserId: "525ea50d-ef19-43ad-8b3e-0365bdafea64",
-        flagReason: "clothes_left_behind"
-      }
-    ]
-  },
-  machineInstance: mockMachineInstance,
-  user: mockUser,
-  programme: mockProgramme,
-});
+export const getMockReservation = () => {
+  const startTime = roundToNearest10(new Date());
+  const endTime = new Date(startTime.getTime() + mockProgramme.duration * 60 * 1000);
+  return plainToInstance(Reservation, {
+    id: "f15d2348-e297-42a0-bf9e-566f6f5bb59f",
+    startTime,
+    endTime,
+    status: ReservationStatus.PENDING,
+    flagged: true,
+    meta: {
+      flags: [
+        {
+          flaggedAt: new Date("2023-01-02T23:37:15.867Z"),
+          flaggedByUserId: "525ea50d-ef19-43ad-8b3e-0365bdafea64",
+          flagReason: "clothes_left_behind"
+        }
+      ]
+    },
+    machineInstance: mockMachineInstance,
+    user: mockUser,
+    programme: mockProgramme,
+  });
+}
 
 export const mailContexts = {
   "welcome": {
@@ -74,14 +79,12 @@ export const mailContexts = {
     token: "i5sudv7az4fkajimqmjktk",
   },
   "reservation-confirmation": {
-    reservation: mockReservation,
+    reservation: getMockReservation(),
   },
   "reservation-start-reminder": {
-    reservation: mockReservation,
-    minutes: 15,
+    reservation: getMockReservation(),
   },
   "reservation-end-reminder": {
-    reservation: mockReservation,
-    minutes: 10,
+    reservation: getMockReservation(),
   },
 };

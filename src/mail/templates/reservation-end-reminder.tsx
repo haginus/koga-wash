@@ -9,10 +9,10 @@ import { Reservation } from 'src/reservations/entities/reservation.entity';
 
 interface EmailProps {
   reservation: Reservation;
-  minutes: number;
 }
 
-export default function ReservationEndReminder({ reservation, minutes }: EmailProps) {
+export default function ReservationEndReminder({ reservation }: EmailProps) {
+  const minutes = Math.round((reservation.endTime.getTime() - Date.now()) / 1000 / 60);
   return (
     <MailScreen heading="Programul se apropie de sfârșit">
       <Text style={styles.paragraph}>

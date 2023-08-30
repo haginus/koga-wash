@@ -10,10 +10,10 @@ import ReservationDisclaimer from '../partials/reservation-disclaimer';
 
 interface EmailProps {
   reservation: Reservation;
-  minutes: number;
 }
 
-export default function ReservationStartReminder({ reservation, minutes }: EmailProps) {
+export default function ReservationStartReminder({ reservation }: EmailProps) {
+  const minutes = Math.round((reservation.startTime.getTime() - Date.now()) / 1000 / 60);
   return (
     <MailScreen heading="Rezervare ta se apropie">
       <Text style={styles.paragraph}>
