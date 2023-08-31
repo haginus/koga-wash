@@ -1,10 +1,12 @@
 import { HttpService } from '@nestjs/axios';
 import { BadGatewayException, Injectable } from '@nestjs/common';
-import { catchError, firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, map } from 'rxjs';
 import { DeviceDto } from './dto/device.dto';
 import { EnergyUsageDto } from './dto/energy-usage.dto';
 import { indexArray } from 'src/lib/util';
 import { MachineInstancesService } from 'src/machines/machine-instances.service';
+import { ActionWrapper } from './types/action-wrapper';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class PlugsService {
@@ -60,13 +62,13 @@ export class PlugsService {
   }
 
   async getEnergyUsage(id: string) {
-    const { data } = await firstValueFrom(
-      this.httpService.get<EnergyUsageDto>(`/${id}/energy-usage`).pipe(
+    return firstValueFrom(
+      this.httpService.get<ActionWrapper<EnergyUsageDto>>(`/${id}/energy-usage`).pipe(
+        map(response => plainToInstance(EnergyUsageDto, response.data.result)),
         catchError(() => {
           throw new BadGatewayException("Nu s-a putut comunica cu gateway-ul.");
         }),
       ),
     );
-    return data;
   }
 }
