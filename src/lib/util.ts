@@ -1,5 +1,4 @@
 import { NotFoundException } from "@nestjs/common";
-import { Reservation } from "src/reservations/entities/reservation.entity";
 import { FindOptionsOrder } from "typeorm";
 
 export function roundToNearest10(date = new Date()) {
@@ -48,4 +47,8 @@ export function getOrder<T>(field: string, direction: 'ASC' | 'DESC'): FindOptio
 
 export function likeStr(str: string, left = true, right = true) {
   return `${left ? '%' : ''}${str}${right ? '%' : ''}`;
+}
+
+export function logError(error: unknown) {
+  console.error(error);
 }

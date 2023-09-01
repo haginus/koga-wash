@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { roundToNearest10, entityOrFail, groupBy, getOrder } from "src/lib/util";
+import { roundToNearest10, entityOrFail, groupBy, getOrder, logError } from "src/lib/util";
 import { MachineInstancesService } from "src/machines/machine-instances.service";
 import { FindOptionsWhere, LessThanOrEqual, Not, Repository } from "typeorm";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
@@ -263,7 +263,11 @@ export class ReservationsService {
     }
     reservation.status = ReservationStatus.CHECKED_IN;
     reservation.meta.checkedInAt = new Date();
-    reservation.meta.initialEnergyUsage = (await this.plugsService.getEnergyUsage(reservation.machineInstance.plugId)).today_energy;
+    try {
+      reservation.meta.initialEnergyUsage = (await this.plugsService.getEnergyUsage(reservation.machineInstance.plugId)).today_energy;
+    } catch(error) {
+      logError(error);
+    }
     await this.plugsService.turnOn(reservation.machineInstance.plugId);
     const result = await this.reservationRepository.save(reservation);
     this.eventEmitter.emit('reservation.checkedIn', result);
@@ -278,9 +282,15 @@ export class ReservationsService {
     }
     reservation.status = ReservationStatus.FINISHED;
     reservation.meta.checkedOutAt = new Date();
-    const currentEnergyUsage = (await this.plugsService.getEnergyUsage(reservation.machineInstance.plugId)).today_energy;
-    reservation.energyUsage = currentEnergyUsage - reservation.meta.initialEnergyUsage;
-    delete reservation.meta.initialEnergyUsage;
+    if(reservation.meta.initialEnergyUsage !== undefined) {
+      try {
+        const currentEnergyUsage = (await this.plugsService.getEnergyUsage(reservation.machineInstance.plugId)).today_energy;
+        reservation.energyUsage = currentEnergyUsage - reservation.meta.initialEnergyUsage;
+        delete reservation.meta.initialEnergyUsage;
+      } catch(error) {
+        logError(error);
+      }
+    }
     await this.plugsService.turnOff(reservation.machineInstance.plugId);
     return this.reservationRepository.save(reservation);
   }
@@ -296,11 +306,18 @@ export class ReservationsService {
       },
       relations: ['machineInstance'],
     });
-    for(const reservation of reservations) {
-      const currentEnergyUsage = (await this.plugsService.getEnergyUsage(reservation.machineInstance.plugId)).today_energy;
-      reservation.meta.initialEnergyUsage = -(currentEnergyUsage - reservation.meta.initialEnergyUsage);
-      await this.reservationRepository.save(reservation);
-    }
+    await Promise.all(
+      reservations.map(async (reservation) => {
+        if(reservation.meta.initialEnergyUsage === undefined) return;
+        try {
+          const currentEnergyUsage = (await this.plugsService.getEnergyUsage(reservation.machineInstance.plugId)).today_energy;
+          reservation.meta.initialEnergyUsage = reservation.meta.initialEnergyUsage - currentEnergyUsage;
+          await this.reservationRepository.save(reservation);
+        } catch(error) {
+          logError(error);
+        }
+      })
+    );
   }
 
 }
