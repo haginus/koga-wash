@@ -12,13 +12,11 @@ export class MailService {
   constructor(private mailerService: MailerService, private configService: ConfigService) {}
 
   async sendUserConfirmation(user: User, token: string) {
-    const url = `${this.configService.get('frontend.url')}/login/token/${token}`;
-
     await this.mailerService.sendMail({
       to: user.email,
       subject: 'Bun venit pe Kogă Wash! Confirmă-ți contul',
       template: './welcome',
-      context: { user, url },
+      context: { user, token },
     });
   }
 
