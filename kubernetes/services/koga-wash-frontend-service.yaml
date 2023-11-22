@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: koga-wash-frontend
+spec:
+  selector:
+    app: koga-wash-frontend
+  ports:
+  - name: koga-wash-frontend
+    protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer

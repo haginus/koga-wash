@@ -1,5 +1,7 @@
 FROM node:16
 
+ARG DATABASE_HOST=mysql
+
 RUN apt-get update && apt-get install -y netcat nano
 
 WORKDIR /usr/src/koga-wash

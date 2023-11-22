@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: koga-wash
+spec:
+  selector:
+    matchLabels:
+      app: koga-wash
+  template:
+    metadata:
+      labels:
+        app: koga-wash
+    spec:
+      containers:
+        - image: haginus/koga-wash
+          name: koga-wash
+          env:
+            - name: PORT
+              value: "3000"
+            - name: DATABASE_HOST
+              value: mysql
+            - name: DATABASE_PORT
+              value: "3306"
+            - name: DATABASE_USERNAME
+              value: root
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
+            - name: DATABASE_NAME
+              value: koga_wash
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: koga-wash-secret
+                  key: jwtSecret
+            - name: CAPTCHA_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: koga-wash-secret
+                  key: captchaSecret
+            - name: GATEWAY_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: koga-wash-config-map
+                  key: gatewayUrl
+            - name: GATEWAY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: koga-wash-secret
+                  key: gatewaySecret
+            - name: MAIL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: koga-wash-config-map
+                  key: mailHost
+            - name: MAIL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: koga-wash-config-map
+                  key: mailPort
+            - name: MAIL_SECURE
+              valueFrom:
+                configMapKeyRef:
+                  name: koga-wash-config-map
+                  key: mailSecure
+            - name: MAIL_AUTH_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: koga-wash-config-map
+                  key: mailAuthUser
+            - name: MAIL_AUTH_PASS
+              valueFrom:
+                configMapKeyRef:
+                  name: koga-wash-config-map
+                  key: mailAuthPass
+          ports:
+            - containerPort: 3000      

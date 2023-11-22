@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: ./docker/Dockerfile
+      args:
+        - DATABASE_HOST=koga-wash-db
     restart: unless-stopped
     depends_on:
       - koga-wash-db

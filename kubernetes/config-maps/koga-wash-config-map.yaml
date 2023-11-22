@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: koga-wash-config-map
+data:
+  frontendUrl: https://koga-wash.haginus.ro
+  mailHost: ''
+  mailPort: '1025'
+  mailSecure: 'false'
+  mailAuthUser: ''
+  mailAuthPass: ''
+  gatewayUrl: ''
